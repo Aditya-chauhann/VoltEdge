@@ -23,6 +23,8 @@ function signToken(id: string, email: string, role: string): string {
 
 // ─── Register ────────────────────────────────────────────────────────────────
 
+import { emailService } from '../services/email.service';
+
 export const register = asyncHandler(async (req: Request, res: Response) => {
   const { name, email, password, phone } = req.body as {
     name?: string; email?: string; password?: string; phone?: string;
@@ -38,6 +40,9 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
   const existing = await User.findOne({ email: email.toLowerCase() });
   if (existing) throw new ApiError(409, 'An account with this email already exists');
 
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
   // passwordHash field triggers bcrypt hashing in the User pre-save hook
   const user = await User.create({
     name:         name.trim(),
@@ -45,21 +50,20 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
     passwordHash: password,
     phone:        phone?.trim(),
     role:         'customer',
+    isEmailVerified: false,
+    otp,
+    otpExpiresAt,
   });
 
   // Create an empty cart for the new user
   await Cart.create({ user: user._id, items: [] });
 
-  const token = signToken(String(user._id), user.email, user.role);
+  // Send OTP
+  await emailService.sendRegistrationOTP(user.email, otp);
 
-  res.status(201).json(ok('Registration successful', {
-    token,
-    user: {
-      id:    user._id,
-      name:  user.name,
-      email: user.email,
-      role:  user.role,
-    },
+  res.status(201).json(ok('Registration successful. Please verify your email.', {
+    requireOtp: true,
+    email: user.email,
   }));
 });
 
@@ -81,9 +85,68 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
 
   if (!user.isActive) throw new ApiError(403, 'Account deactivated — contact support');
 
+  if (!user.isEmailVerified) {
+    // Generate new OTP and send it since they are trying to login unverified
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    user.otp = otp;
+    user.otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    await user.save();
+    
+    await emailService.sendRegistrationOTP(user.email, otp);
+
+    return res.json(ok('Email not verified. A new OTP has been sent.', {
+      requireOtp: true,
+      email: user.email,
+    }));
+  }
+
   const token = signToken(String(user._id), user.email, user.role);
 
   res.json(ok('Login successful', {
+    token,
+    user: {
+      id:    user._id,
+      name:  user.name,
+      email: user.email,
+      role:  user.role,
+      phone: user.phone,
+    },
+  }));
+});
+
+// ─── Verify OTP ───────────────────────────────────────────────────────────────
+
+export const verifyOtp = asyncHandler(async (req: Request, res: Response) => {
+  const { email, otp } = req.body as { email?: string; otp?: string };
+
+  if (!email || !otp) {
+    throw new ApiError(400, 'Email and OTP are required');
+  }
+
+  const user = await User.findOne({ email: email.toLowerCase() });
+  if (!user) throw new ApiError(404, 'User not found');
+
+  if (user.isEmailVerified) {
+    throw new ApiError(400, 'Email is already verified');
+  }
+
+  if (user.otp !== otp) {
+    throw new ApiError(400, 'Invalid OTP');
+  }
+
+  if (!user.otpExpiresAt || user.otpExpiresAt < new Date()) {
+    throw new ApiError(400, 'OTP has expired. Please try logging in to get a new one.');
+  }
+
+  // OTP valid!
+  user.isEmailVerified = true;
+  user.otp = undefined;
+  user.otpExpiresAt = undefined;
+  await user.save();
+
+  const token = signToken(String(user._id), user.email, user.role);
+
+  res.json(ok('Email verified successfully', {
     token,
     user: {
       id:    user._id,

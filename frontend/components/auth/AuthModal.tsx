@@ -14,14 +14,14 @@ export default function AuthModal() {
   const { setAuth } = useAuthStore();
   const { addItem, fetchCart } = useCartStore();
 
-  const [mode, setMode] = useState<'login' | 'register' | 'forgot' | 'forgot-reset'>(authModalMode);
+  const [mode, setMode] = useState<'login' | 'register' | 'forgot' | 'forgot-reset' | 'otp'>(authModalMode);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
 
   // Form state
   const [form, setForm] = useState({
-    name: '', email: '', password: '', confirmPassword: '', phone: '', newPassword: '',
+    name: '', email: '', password: '', confirmPassword: '', phone: '', newPassword: '', otp: '',
   });
 
   useEffect(() => {
@@ -62,6 +62,15 @@ export default function AuthModal() {
     setIsLoading(true);
     try {
       const res  = await authApi.login({ email: form.email, password: form.password });
+      
+      // Check if OTP is required
+      if (res.data?.data?.requireOtp) {
+        toast.error(res.data.message || 'Please verify your email.');
+        setMode('otp');
+        setIsLoading(false);
+        return;
+      }
+
       const { user, token } = res.data.data;
       setAuth(user, token);
       toast.success(`Welcome back, ${user.name}! 👋`);
@@ -82,6 +91,32 @@ export default function AuthModal() {
     setIsLoading(true);
     try {
       const res = await authApi.register({ name: form.name, email: form.email, password: form.password, phone: form.phone });
+      
+      if (res.data?.data?.requireOtp) {
+        toast.success(res.data.message || 'OTP sent to your email.');
+        setMode('otp');
+        setIsLoading(false);
+        return;
+      }
+
+      const { user, token } = res.data.data;
+      setAuth(user, token);
+      toast.success(`Welcome to VoltEdge, ${user.name}! 🎉`);
+      closeAuthModal();
+      await executePendingAction();
+    } catch (err) {
+      toast.error(getApiError(err));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.email || !form.otp) return toast.error('Please enter the OTP');
+    setIsLoading(true);
+    try {
+      const res = await authApi.verifyOtp({ email: form.email, otp: form.otp });
       const { user, token } = res.data.data;
       setAuth(user, token);
       toast.success(`Welcome to VoltEdge, ${user.name}! 🎉`);
@@ -247,6 +282,26 @@ export default function AuthModal() {
                       Sign in
                     </button>
                   </p>
+                </div>
+              )}
+
+              {/* ─── Verify OTP ─────────────────────────────────────── */}
+              {mode === 'otp' && (
+                <div className="px-6 py-6">
+                  <button onClick={() => setMode('login')} className="flex items-center gap-1 text-xs text-gray-400 hover:text-white mb-4 transition-colors">
+                    <ArrowLeft size={14} /> Back to login
+                  </button>
+                  <h2 className="font-display font-bold text-2xl text-white mb-1">Verify your email</h2>
+                  <p className="text-sm text-gray-400 mb-6">Enter the 6-digit code sent to <span className="text-white">{form.email}</span></p>
+
+                  <form onSubmit={handleVerifyOtp} className="space-y-4">
+                    <InputField icon={<Mail size={16} />} type="text" placeholder="6-digit OTP code"
+                      value={form.otp} onChange={(v) => updateField('otp', v)} />
+                    <button type="submit" disabled={isLoading}
+                      className="btn-primary w-full flex items-center justify-center gap-2">
+                      {isLoading ? <Spinner /> : 'Verify & Login'}
+                    </button>
+                  </form>
                 </div>
               )}
 

@@ -62,6 +62,12 @@ export const env = {
   // Pricing
   PRICE_MARKUP_PERCENTAGE: parseFloat(optionalEnv('PRICE_MARKUP_PERCENTAGE', '30')),
 
+  // Email/SMTP (Optional for now)
+  SMTP_HOST: process.env.SMTP_HOST || '',
+  SMTP_PORT: process.env.SMTP_PORT || '',
+  SMTP_USER: process.env.SMTP_USER || '',
+  SMTP_PASS: process.env.SMTP_PASS || '',
+
   get isProduction() {
     return this.NODE_ENV === 'production';
   },

@@ -45,6 +45,9 @@ export interface IUser extends Document {
   addresses:    IAddress[];
   wishlist:     string[];
   isActive:     boolean;
+  isEmailVerified: boolean;
+  otp?:         string;
+  otpExpiresAt?: Date;
   createdAt:    Date;
   updatedAt:    Date;
 
@@ -68,6 +71,9 @@ const UserSchema = new Schema<IUser>(
     addresses:    { type: [AddressSchema], default: [] },
     wishlist:     [{ type: String }],
     isActive:     { type: Boolean, default: true },
+    isEmailVerified: { type: Boolean, default: false },
+    otp:          { type: String },
+    otpExpiresAt: { type: Date },
   },
   { timestamps: true },
 );

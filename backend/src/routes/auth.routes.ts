@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import {
-  register, login,
+  register, login, verifyOtp,
   forgotPasswordStep1, forgotPasswordStep2,
   getMe, updateProfile,
   addAddress, updateAddress, deleteAddress,
@@ -13,6 +13,7 @@ const router = Router();
 // Public routes (rate-limited)
 router.post('/register',                   authLimiter, register);
 router.post('/login',                      authLimiter, login);
+router.post('/verify-otp',                 authLimiter, verifyOtp);
 router.post('/forgot-password/check',      authLimiter, forgotPasswordStep1);
 router.post('/forgot-password/reset',      authLimiter, forgotPasswordStep2);
 

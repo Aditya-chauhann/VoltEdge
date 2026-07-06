@@ -61,6 +61,9 @@ export const authApi = {
   login: (data: { email: string; password: string }) =>
     apiClient.post('/auth/login', data),
 
+  verifyOtp: (data: { email: string; otp: string }) =>
+    apiClient.post('/auth/verify-otp', data),
+
   forgotPasswordCheck: (email: string) =>
     apiClient.post('/auth/forgot-password/check', { email }),
 
