@@ -6,6 +6,7 @@
 
 import { Response } from 'express';
 import { Cart } from '../models/Cart.model';
+import { Coupon } from '../models/Coupon.model';
 import { asyncHandler } from '../utils/asyncHandler';
 import { ApiError } from '../utils/ApiError';
 import { ok } from '../utils/ApiResponse';
@@ -210,7 +211,6 @@ export const applyCoupon = asyncHandler(async (req: AuthRequest, res: Response) 
   const { couponCode } = req.body as { couponCode?: string };
   if (!couponCode) throw new ApiError(400, 'couponCode is required');
 
-  const { Coupon } = await import('../models/Coupon.model');
   const coupon = await Coupon.findOne({
     code:     couponCode.toUpperCase(),
     isActive: true,
