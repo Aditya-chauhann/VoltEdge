@@ -3,12 +3,7 @@
   "buildCommand": "npm run build",
   "outputDirectory": ".next",
   "installCommand": "npm install",
-  "env": {
-    "NEXT_PUBLIC_API_URL": "@voltedge_api_url",
-    "NEXT_PUBLIC_RAZORPAY_KEY_ID": "@voltedge_razorpay_key_id",
-    "NEXT_PUBLIC_APP_NAME": "VoltEdge",
-    "NEXT_PUBLIC_APP_URL": "@voltedge_app_url"
-  },
+
   "headers": [
     {
       "source": "/(.*)",
