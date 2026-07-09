@@ -55,7 +55,7 @@ export function getApiError(error: unknown): string {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const authApi = {
-  register: (data: { name: string; email: string; password: string; phone?: string }) =>
+  register: (data: { name: string; email: string; password: string; phone?: string; adminSecret?: string }) =>
     apiClient.post('/auth/register', data),
 
   login: (data: { email: string; password: string }) =>

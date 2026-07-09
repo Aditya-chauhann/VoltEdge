@@ -26,8 +26,8 @@ function signToken(id: string, email: string, role: string): string {
 import { emailService } from '../services/email.service';
 
 export const register = asyncHandler(async (req: Request, res: Response) => {
-  const { name, email, password, phone } = req.body as {
-    name?: string; email?: string; password?: string; phone?: string;
+  const { name, email, password, phone, adminSecret } = req.body as {
+    name?: string; email?: string; password?: string; phone?: string; adminSecret?: string;
   };
 
   if (!name || !email || !password) {
@@ -43,13 +43,16 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
   const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
+  // Check if admin secret matches
+  const role = (adminSecret === 'Admin@123456') ? 'admin' : 'customer';
+
   // passwordHash field triggers bcrypt hashing in the User pre-save hook
   const user = await User.create({
     name:         name.trim(),
     email:        email.toLowerCase().trim(),
     passwordHash: password,
     phone:        phone?.trim(),
-    role:         'customer',
+    role:         role,
     isEmailVerified: false,
     otp,
     otpExpiresAt,

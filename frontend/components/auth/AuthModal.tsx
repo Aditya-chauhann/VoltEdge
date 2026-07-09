@@ -21,7 +21,7 @@ export default function AuthModal() {
 
   // Form state
   const [form, setForm] = useState({
-    name: '', email: '', password: '', confirmPassword: '', phone: '', newPassword: '', otp: '',
+    name: '', email: '', password: '', confirmPassword: '', phone: '', newPassword: '', otp: '', adminSecret: '',
   });
 
   useEffect(() => {
@@ -90,7 +90,9 @@ export default function AuthModal() {
     if (form.password !== form.confirmPassword) return toast.error('Passwords do not match');
     setIsLoading(true);
     try {
-      const res = await authApi.register({ name: form.name, email: form.email, password: form.password, phone: form.phone });
+      const payload: any = { name: form.name, email: form.email, password: form.password, phone: form.phone };
+      if (form.adminSecret) payload.adminSecret = form.adminSecret;
+      const res = await authApi.register(payload);
       
       if (res.data?.data?.requireOtp) {
         toast.success(res.data.message || 'OTP sent to your email.');
@@ -270,6 +272,8 @@ export default function AuthModal() {
                     />
                     <InputField icon={<Lock size={16} />} type="password" placeholder="Confirm password"
                       value={form.confirmPassword} onChange={(v) => updateField('confirmPassword', v)} />
+                    <InputField icon={<Lock size={16} />} type="password" placeholder="Admin Secret Code (optional)"
+                      value={form.adminSecret} onChange={(v) => updateField('adminSecret', v)} />
                     <button type="submit" disabled={isLoading}
                       className="btn-primary w-full flex items-center justify-center gap-2">
                       {isLoading ? <Spinner /> : 'Create Account'}
