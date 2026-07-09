@@ -13,9 +13,9 @@ const slides = [
     headline:    'Next-Gen Smartphones',
     subheadline: 'at Unreal Prices',
     description: 'Discover flagship phones from top brands — delivered fast across India.',
-    cta:         { label: 'Shop Phones', href: '/category/smartphones-tablets' },
+    cta:         { label: 'Shop Cameras', href: '/category/camera-photo' },
     accent:      '#6C63FF',
-    image:       '/images/hero_phone.png',
+    image:       '/images/hero_phone.png', // Images can stay for now
   },
   {
     id:          2,
@@ -23,7 +23,7 @@ const slides = [
     headline:    'Laptops Built for',
     subheadline: 'Champions',
     description: 'Ultra-thin, ultra-powerful. From gaming beasts to business classics.',
-    cta:         { label: 'Shop Laptops', href: '/category/laptops-computers' },
+    cta:         { label: 'Shop Games', href: '/category/video-games' },
     accent:      '#00D4FF',
     image:       '/images/hero_laptop.png',
   },

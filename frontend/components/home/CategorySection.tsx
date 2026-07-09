@@ -5,19 +5,12 @@ import { motion } from 'framer-motion';
 import { Category } from '@/types';
 
 const CATEGORY_EMOJIS: Record<string, string> = {
-  'smartphones-tablets':      '📱',
-  'laptops-computers':        '💻',
-  'cameras-photography':      '📷',
-  'smartwatches-wearables':   '⌚',
-  'headphones-earbuds':       '🎧',
-  'speakers-home-audio':      '🔊',
-  'gaming-accessories':       '🎮',
-  'chargers-power-banks':     '🔋',
-  'smart-home':               '🏠',
-  'mobile-laptop-accessories':'🛍️',
-  'drones-rc-gadgets':        '🚁',
-  'networking':               '📡',
-  'tv-streaming':             '📺',
+  'accessories-parts':        '🔌',
+  'home-audio-video':         '🔊',
+  'smart-electronics':        '⌚',
+  'camera-photo':             '📷',
+  'video-games':              '🎮',
+  'portable-audio-video':     '🎧',
 };
 
 const BG_COLORS = [

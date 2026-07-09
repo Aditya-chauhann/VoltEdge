@@ -38,6 +38,23 @@ export default function ProductDetailPage() {
   const [addedToCart,  setAddedToCart]  = useState(false);
   const [isLoading,    setIsLoading]    = useState(true);
   const [isAdding,     setIsAdding]     = useState(false);
+  const [isModalOpen,  setIsModalOpen]  = useState(false);
+  const [isDescExpanded, setIsDescExpanded] = useState(false);
+  const [zoomStyle,    setZoomStyle]    = useState({ transformOrigin: 'center center', transform: 'scale(1)' });
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - left) / width) * 100;
+    const y = ((e.clientY - top) / height) * 100;
+    setZoomStyle({
+      transformOrigin: `${x}% ${y}%`,
+      transform: 'scale(2.2)'
+    });
+  };
+
+  const handleMouseLeave = () => {
+    setZoomStyle({ transformOrigin: 'center center', transform: 'scale(1)' });
+  };
 
   useEffect(() => {
     async function load() {
@@ -113,7 +130,7 @@ export default function ProductDetailPage() {
   const images     = product.images.length > 0 ? product.images : ['/placeholder-product.png'];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Breadcrumb */}
       <button onClick={() => router.back()} className="flex items-center gap-1 text-sm text-gray-400 hover:text-white mb-6 transition-colors">
         <ChevronLeft size={16} /> Back
@@ -123,7 +140,12 @@ export default function ProductDetailPage() {
         {/* ── Images ──────────────────────────────────────────────── */}
         <div className="space-y-4">
           {/* Main image */}
-          <div className="aspect-square bg-base-100 rounded-3xl overflow-hidden glass-card">
+          <div 
+            className="aspect-square bg-base-100 rounded-3xl overflow-hidden glass-card cursor-crosshair relative group"
+            onClick={() => setIsModalOpen(true)}
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
+          >
             <motion.img
               key={selectedImg}
               initial={{ opacity: 0 }}
@@ -131,19 +153,22 @@ export default function ProductDetailPage() {
               transition={{ duration: 0.3 }}
               src={images[selectedImg]}
               alt={product.title}
-              className="w-full h-full object-contain p-4"
+              className="w-full h-full object-contain p-4 transition-transform duration-75 ease-out"
+              style={zoomStyle}
               onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-product.png'; }}
             />
+            {/* Optional hint overlay */}
+            <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_50px_rgba(0,0,0,0.1)] group-hover:shadow-[inset_0_0_50px_rgba(0,0,0,0.3)] transition-shadow"></div>
           </div>
 
           {/* Thumbnails */}
           {images.length > 1 && (
-            <div className="flex gap-2 overflow-x-auto no-scrollbar">
+            <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
               {images.map((img, idx) => (
                 <button
                   key={idx}
                   onClick={() => setSelectedImg(idx)}
-                  className={`flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden border-2 transition-all ${
+                  className={`aspect-square rounded-xl overflow-hidden border-2 transition-all ${
                     idx === selectedImg ? 'border-primary-400' : 'border-transparent opacity-60 hover:opacity-100'
                   }`}
                 >
@@ -199,11 +224,11 @@ export default function ProductDetailPage() {
           </div>
 
           {/* Variants */}
-          {product.variants.length > 0 && (
+          {product.variants.filter(v => v.name && v.name !== 'Default').length > 0 && (
             <div>
               <p className="text-sm text-gray-400 mb-2 font-medium">Select Variant:</p>
               <div className="flex flex-wrap gap-2">
-                {product.variants.map((v) => (
+                {product.variants.filter(v => v.name && v.name !== 'Default').map((v) => (
                   <button
                     key={v.variantId}
                     onClick={() => setSelectedVar(v.variantId)}
@@ -318,10 +343,31 @@ export default function ProductDetailPage() {
       {product.description && (
         <section className="mb-12">
           <h2 className="section-heading mb-4">About This Product</h2>
-          <div
-            className="glass-card p-6 text-gray-300 text-sm leading-relaxed prose prose-invert max-w-none"
-            dangerouslySetInnerHTML={{ __html: product.description.replace(/\n/g, '<br/>') }}
-          />
+          <div className="glass-card p-6 relative">
+            <div
+              className={`text-gray-300 text-sm leading-relaxed prose prose-invert max-w-none transition-all duration-300 ${
+                !isDescExpanded ? 'max-h-[300px] overflow-hidden' : ''
+              }`}
+              dangerouslySetInnerHTML={{ 
+                // Remove all <img> tags, the "Product Image:" text, and convert newlines to <br/>
+                __html: product.description
+                          .replace(/<img[^>]*>/gi, '')
+                          .replace(/Product Image:/gi, '')
+                          .replace(/\n/g, '<br/>') 
+              }}
+            />
+            {!isDescExpanded && (
+              <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#0f1015] to-transparent pointer-events-none rounded-b-2xl"></div>
+            )}
+            <div className={`mt-4 text-center relative z-10 ${!isDescExpanded ? '-mt-6' : ''}`}>
+              <button 
+                onClick={() => setIsDescExpanded(!isDescExpanded)}
+                className="px-6 py-2 rounded-full border border-primary-500/30 text-primary-400 font-medium hover:bg-primary-500/10 hover:border-primary-400 transition-all text-sm backdrop-blur-md"
+              >
+                {isDescExpanded ? 'Read Less' : 'Read More'}
+              </button>
+            </div>
+          </div>
         </section>
       )}
 
@@ -362,6 +408,49 @@ export default function ProductDetailPage() {
             {related.map((p) => <ProductCard key={p._id} product={p} />)}
           </div>
         </section>
+      )}
+
+      {/* ── Image Modal ────────────────────────────────────────── */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4 sm:p-8 backdrop-blur-sm">
+          <div className="bg-base-100 w-full max-w-6xl h-[85vh] rounded-2xl overflow-hidden flex flex-col lg:flex-row shadow-2xl relative border border-white/10">
+            <button 
+              onClick={() => setIsModalOpen(false)}
+              className="absolute top-4 right-4 z-10 w-10 h-10 flex items-center justify-center rounded-full bg-black/50 hover:bg-black/80 text-white transition-colors"
+            >
+              ✕
+            </button>
+            
+            {/* Main Modal Image */}
+            <div className="flex-1 bg-black/30 p-8 flex items-center justify-center relative">
+              <img 
+                src={images[selectedImg]} 
+                className="max-w-full max-h-full object-contain drop-shadow-2xl"
+                alt={product.title}
+              />
+            </div>
+            
+            {/* Sidebar Thumbnails */}
+            <div className="w-full lg:w-[400px] bg-base-100/95 p-6 flex flex-col border-l border-white/5 overflow-y-auto no-scrollbar">
+              <h3 className="text-lg font-display text-white mb-2 pr-8 leading-tight">{product.title}</h3>
+              {product.variants.length > 0 && <p className="text-sm text-primary-400 mb-6 font-medium">Variant: {product.variants[0]?.name || ''}</p>}
+              
+              <div className="grid grid-cols-3 gap-3">
+                {images.map((img, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setSelectedImg(idx)}
+                    className={`aspect-square rounded-xl overflow-hidden border-2 transition-all ${
+                      idx === selectedImg ? 'border-primary-400 shadow-[0_0_15px_rgba(var(--primary-400),0.3)]' : 'border-transparent opacity-50 hover:opacity-100'
+                    }`}
+                  >
+                    <img src={img} alt={`Thumb ${idx}`} className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -4,12 +4,12 @@ import Link from 'next/link';
 import { Zap, Mail, Phone, MapPin, Instagram, Twitter, Youtube, Facebook } from 'lucide-react';
 
 const categories = [
-  { name: 'Smartphones',   href: '/category/smartphones-tablets' },
-  { name: 'Laptops',       href: '/category/laptops-computers' },
-  { name: 'Cameras',       href: '/category/cameras-photography' },
-  { name: 'Smartwatches',  href: '/category/smartwatches-wearables' },
-  { name: 'Headphones',    href: '/category/headphones-earbuds' },
-  { name: 'Gaming',        href: '/category/gaming-accessories' },
+  { name: 'Accessories',       href: '/category/accessories-parts' },
+  { name: 'Home Audio',        href: '/category/home-audio-video' },
+  { name: 'Smart Electronics', href: '/category/smart-electronics' },
+  { name: 'Cameras',           href: '/category/camera-photo' },
+  { name: 'Video Games',       href: '/category/video-games' },
+  { name: 'Portable Audio',    href: '/category/portable-audio-video' },
 ];
 
 const support = [
@@ -29,7 +29,7 @@ const legal = [
 export default function Footer() {
   return (
     <footer className="bg-base-50 border-t border-primary-400/10 mt-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
 
           {/* Brand column */}

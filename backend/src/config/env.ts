@@ -55,6 +55,7 @@ export const env = {
   CJ_HOME_CATEGORY_FIRST_NAME: optionalEnv('CJ_HOME_CATEGORY_FIRST_NAME', ''),
 
   // Redis Settings
+  REDIS_URL: optionalEnv('REDIS_URL', 'redis://localhost:6379'),
   REDIS_PRODUCT_TTL: parseInt(optionalEnv('REDIS_PRODUCT_TTL', '3600'), 10),
   REDIS_CATEGORY_TTL: parseInt(optionalEnv('REDIS_CATEGORY_TTL', '86400'), 10),
   REDIS_CART_TTL: parseInt(optionalEnv('REDIS_CART_TTL', '604800'), 10),

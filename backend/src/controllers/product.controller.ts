@@ -1,53 +1,55 @@
-/**
- * Product Controller (Database-Backed Architecture)
- * Fetches products from local MongoDB.
- */
-
 import { Request, Response } from 'express';
-import { Category } from '../models/Category.model';
-import { Product } from '../models/Product.model';
+import { cjApiService } from '../services/cjApi.service';
 import { asyncHandler } from '../utils/asyncHandler';
 import { ApiError } from '../utils/ApiError';
 import { ok } from '../utils/ApiResponse';
-
 import { currencyService } from '../services/currency.service';
 import { env } from '../config/env';
 
-// ─── Helpers to map DB products to our Frontend Product model ────────────────
+// Static categories fallback with valid MongoDB ObjectIds
+const MOCK_CATEGORIES = [
+  { _id: '64b1f1c5e4b0a1a2b3c4d5e1', id: '64b1f1c5e4b0a1a2b3c4d5e1', name: 'Accessories & Parts', slug: 'accessories-parts', image: 'https://images.unsplash.com/photo-1555664424-778a1e5e1b48?w=800', isActive: true, cjKeyword: '30063684-45E2-4929-BB85-441C1DF80DDE' },
+  { _id: '64b1f1c5e4b0a1a2b3c4d5e2', id: '64b1f1c5e4b0a1a2b3c4d5e2', name: 'Home Audio & Video', slug: 'home-audio-video', image: 'https://images.unsplash.com/photo-1558002038-1055907df827?w=800', isActive: true, cjKeyword: '4BFAF763-DD09-4DD3-A7E9-E03724D1D51B' },
+  { _id: '64b1f1c5e4b0a1a2b3c4d5e3', id: '64b1f1c5e4b0a1a2b3c4d5e3', name: 'Smart Electronics', slug: 'smart-electronics', image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800', isActive: true, cjKeyword: '6A03FBB1-F7D9-441F-B06D-EF45CA87B553' },
+  { _id: '64b1f1c5e4b0a1a2b3c4d5e4', id: '64b1f1c5e4b0a1a2b3c4d5e4', name: 'Camera & Photo', slug: 'camera-photo', image: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=800', isActive: true, cjKeyword: '85E0D3B7-C3C4-4F1B-98A6-958389A1BEBE' },
+  { _id: '64b1f1c5e4b0a1a2b3c4d5e5', id: '64b1f1c5e4b0a1a2b3c4d5e5', name: 'Video Games', slug: 'video-games', image: 'https://images.unsplash.com/photo-1600069226367-4dc4a8de47e4?w=800', isActive: true, cjKeyword: '997DBFF0-627C-4397-80D3-C12EA3906969' },
+  { _id: '64b1f1c5e4b0a1a2b3c4d5e6', id: '64b1f1c5e4b0a1a2b3c4d5e6', name: 'Portable Audio & Video', slug: 'portable-audio-video', image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800', isActive: true, cjKeyword: 'DC11C779-CCD5-429C-9A93-F638456E745B' }
+];
 
+// Helper to map CJ Product to VoltEdge Frontend Product format
 function mapToFrontendProduct(p: any, exchangeRate: number): any {
-  // DB stores price in USD. Convert to INR for the frontend.
-  const basePriceInr = p.price * exchangeRate;
+  // Convert price from USD to INR using the exchange rate
+  const basePriceInr = p.sellPrice * exchangeRate;
   const marginPercent = env.PRICE_MARKUP_PERCENTAGE || 30;
   
-  // The actual selling price includes the platform margin
   const salePriceInr = basePriceInr * (1 + marginPercent / 100);
-  
-  // The 'original' struck-out price (e.g. showing a 20% discount visually)
   const originalPriceInr = salePriceInr * 1.20;
   
   return {
     _id: p.pid,
     cjProductId: p.pid,
-    title: p.name,
+    title: p.productName || p.productNameEn,
     description: p.description || '',
-    images: [p.image],
+    images: p.productImages || [p.productImage],
     brand: 'VoltEdge',
     price: Number(originalPriceInr.toFixed(2)),
     salePrice: Number(salePriceInr.toFixed(2)),
     discountPct: 20,
-    stock: p.stock || 99,
-    variants: [],
+    stock: p.variants ? p.variants.reduce((acc: number, v: any) => acc + (v.stock || 0), 0) : 99,
+    variants: (p.variants || []).map((v: any) => ({
+      ...v,
+      variantId: v.vid || v.variantId,
+      name: v.variantName || v.name || 'Default',
+    })),
     category: p.categoryName || p.categoryId,
-    tags: [],
+    tags: p.materials || [],
     specifications: [],
-    avgRating: p.rating || 4.5,
-    reviewCount: p.reviewCount || 42,
+    
+    // No fake data!
+    avgRating: 0,
+    reviewCount: 0,
+    
     status: 'active',
-    isFeatured: false,
-    isBestSeller: false,
-    isNewArrival: false,
-    isTrending: false,
   };
 }
 
@@ -63,67 +65,62 @@ export const listProducts = asyncHandler(async (req: Request, res: Response) => 
     maxPrice,
     keyword,
     category,
+    trending,
+    bestSeller,
+    newArrival,
   } = req.query as Record<string, string | undefined>;
 
-  const pageNum = Math.max(1, parseInt(page, 10));
+  let pageNum = Math.max(1, parseInt(page, 10));
   const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10)));
-  const skip = (pageNum - 1) * limitNum;
   
-  const exchangeRate = await currencyService.getUsdToInrRate();
-
-  // Build MongoDB query
-  const query: any = { isActive: true };
-
-  if (keyword) {
-    query.name = { $regex: keyword, $options: 'i' };
+  // Make homepage sections visually distinct by offsetting the page number
+  if (!category && !keyword) {
+    if (trending === 'true') pageNum += 3;
+    if (bestSeller === 'true') pageNum += 7;
+    if (newArrival === 'true') pageNum += 12;
   }
 
+  // Map MongoDB _id back to CJ Dropshipping categoryId
+  let mappedCategoryId = category;
   if (category) {
-    let catDoc;
-    if (category.match(/^[0-9a-fA-F]{24}$/)) {
-      catDoc = await Category.findById(category);
-    } else {
-      catDoc = await Category.findOne({ slug: category });
-    }
-    
-    if (catDoc) {
-      query.categoryId = catDoc._id.toString();
-    } else {
-      query.categoryId = category;
+    // We are inside the product.controller, so MOCK_CATEGORIES is accessible in this file
+    const foundCat = MOCK_CATEGORIES.find(c => c._id === category || c.slug === category);
+    if (foundCat) {
+      mappedCategoryId = foundCat.cjKeyword;
     }
   }
 
-  if (minPrice || maxPrice) {
-    query.price = {};
-    // Frontend sends filter in INR, DB stores in USD. Convert INR to USD for the query.
-    if (minPrice) query.price.$gte = parseFloat(minPrice) / exchangeRate;
-    if (maxPrice) query.price.$lte = parseFloat(maxPrice) / exchangeRate;
+  const params: any = {
+    page: pageNum,
+    limit: limitNum,
+    keyword,
+    categoryId: mappedCategoryId,
+  };
+
+  if (minPrice) params.minPrice = parseFloat(minPrice);
+  if (maxPrice) params.maxPrice = parseFloat(maxPrice);
+  
+  if (sort) {
+    if (sort === 'salePrice' || sort === 'price') {
+      params.sortBy = order === 'asc' ? 'price_asc' : 'price_desc';
+    } else if (sort !== 'createdAt') {
+      params.sortBy = sort;
+    }
   }
 
-  // Build MongoDB sort
-  let sortObj: any = { createdAt: -1 };
-  if (sort === 'salePrice') {
-    sortObj = { price: order === 'asc' ? 1 : -1 };
-  } else if (sort === 'avgRating' || sort === 'reviewCount') {
-    sortObj = { rating: -1, reviewCount: -1 };
-  }
-
-  const [dbProducts, total] = await Promise.all([
-    Product.find(query).sort(sortObj).skip(skip).limit(limitNum).lean(),
-    Product.countDocuments(query),
-  ]);
-
-  const products = dbProducts.map(p => mapToFrontendProduct(p, exchangeRate));
+  const data = await cjApiService.getProductList(params);
+  const exchangeRate = await currencyService.getUsdToInrRate();
+  const products = data.list.map(p => mapToFrontendProduct(p, exchangeRate));
 
   const responseData = {
     products,
     pagination: {
-      page: pageNum,
-      limit: limitNum,
-      total: total,
-      totalPages: Math.ceil(total / limitNum),
-      hasNext: pageNum < Math.ceil(total / limitNum),
-      hasPrev: pageNum > 1,
+      page: data.pageNum,
+      limit: data.pageSize,
+      total: data.total,
+      totalPages: Math.ceil(data.total / data.pageSize),
+      hasNext: data.pageNum < Math.ceil(data.total / data.pageSize),
+      hasPrev: data.pageNum > 1,
     },
   };
 
@@ -141,30 +138,19 @@ export const searchProducts = asyncHandler(async (req: Request, res: Response) =
 
   const pageNum = Math.max(1, parseInt(page, 10));
   const limitNum = Math.min(50, parseInt(limit, 10));
-  const skip = (pageNum - 1) * limitNum;
-  
+
+  const data = await cjApiService.getProductList({ keyword: q, page: pageNum, limit: limitNum });
   const exchangeRate = await currencyService.getUsdToInrRate();
-
-  const query = {
-    isActive: true,
-    name: { $regex: q, $options: 'i' },
-  };
-
-  const [dbProducts, total] = await Promise.all([
-    Product.find(query).skip(skip).limit(limitNum).lean(),
-    Product.countDocuments(query),
-  ]);
-
-  const products = dbProducts.map(p => mapToFrontendProduct(p, exchangeRate));
+  const products = data.list.map(p => mapToFrontendProduct(p, exchangeRate));
 
   res.json(ok('Search results', {
     query: q,
     products,
     pagination: {
-      page: pageNum,
-      limit: limitNum,
-      total: total,
-      totalPages: Math.ceil(total / limitNum),
+      page: data.pageNum,
+      limit: data.pageSize,
+      total: data.total,
+      totalPages: Math.ceil(data.total / data.pageSize),
     },
   }));
 });
@@ -176,120 +162,70 @@ export const autosuggest = asyncHandler(async (req: Request, res: Response) => {
     return res.json(ok('Suggestions', { suggestions: [] }));
   }
 
+  const data = await cjApiService.getProductList({ keyword: q, page: 1, limit: 8 });
   const exchangeRate = await currencyService.getUsdToInrRate();
 
-  const dbProducts = await Product.find({
-    isActive: true,
-    name: { $regex: q, $options: 'i' },
-  }).limit(8).lean();
-
   res.json(ok('Suggestions', {
-    suggestions: dbProducts.map((p: any) => ({
+    suggestions: data.list.map((p: any) => ({
       id: p.pid,
-      title: p.name,
-      image: p.image,
-      price: Number((p.price * exchangeRate).toFixed(2)),
+      title: p.productName || p.productNameEn,
+      image: p.productImage,
+      price: Number((p.sellPrice * exchangeRate * (1 + (env.PRICE_MARKUP_PERCENTAGE || 30) / 100)).toFixed(2)),
     })),
   }));
 });
 
 // ─── Single product ───────────────────────────────────────────────────────────
 
-import { cjApiService } from '../services/cjApi.service';
-
 export const getProduct = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params as { id: string };
 
-  const dbProduct = await Product.findOne({ pid: id, isActive: true });
-  if (!dbProduct) throw new ApiError(404, 'Product not found');
-
-  try {
-    // Fetch live data from CJ API to avoid price/stock collision
-    const liveCjProduct = await cjApiService.getProductDetail(id);
-    if (liveCjProduct) {
-      // Update DB with the live rate/stock
-      let updated = false;
-      const livePrice = liveCjProduct.sellPrice;
-      const liveStock = liveCjProduct.variants 
-        ? liveCjProduct.variants.reduce((acc, v) => acc + (v.stock || 0), 0) 
-        : undefined;
-
-      if (livePrice && livePrice !== dbProduct.price) {
-        dbProduct.price = livePrice;
-        updated = true;
-      }
-      
-      if (liveStock !== undefined && liveStock !== dbProduct.stock) {
-        dbProduct.stock = liveStock;
-        updated = true;
-      }
-
-      if (updated) {
-        await dbProduct.save();
-      }
-    }
-  } catch (err) {
-    // Continue with the DB product if CJ fetch fails
-    console.warn(`Failed to fetch live CJ product details for ${id}`, err);
-  }
+  const product = await cjApiService.getProductDetail(id);
+  if (!product) throw new ApiError(404, 'Product not found');
 
   const exchangeRate = await currencyService.getUsdToInrRate();
-  const frontendProduct = mapToFrontendProduct(dbProduct.toObject(), exchangeRate);
+  const frontendProduct = mapToFrontendProduct(product, exchangeRate);
   res.json(ok('Product fetched', frontendProduct));
 });
 
-// ─── Products by category ─────────────────────────────────────────────────────
+// ─── Products by category (using Static Mock) ─────────
 
 export const getProductsByCategory = asyncHandler(async (req: Request, res: Response) => {
   const { slug } = req.params as { slug: string };
-  const {
-    page = '1',
-    limit = '20',
-    sort,
-    order,
-    minPrice,
-    maxPrice,
-  } = req.query as Record<string, string | undefined>;
+  const { page = '1', limit = '20', sort, order, minPrice, maxPrice } = req.query as Record<string, string | undefined>;
 
-  const cat = await Category.findOne({ slug, isActive: true });
+  const cat = MOCK_CATEGORIES.find(c => c.slug === slug);
   if (!cat) throw new ApiError(404, `Category "${slug}" not found`);
 
   const pageNum = Math.max(1, parseInt(page, 10));
   const limitNum = Math.min(100, parseInt(limit, 10));
-  const skip = (pageNum - 1) * limitNum;
-  
-  const exchangeRate = await currencyService.getUsdToInrRate();
 
-  const query: any = { isActive: true, categoryId: cat._id.toString() };
+  const params: any = {
+    page: pageNum,
+    limit: limitNum,
+    categoryId: cat.cjKeyword || cat._id, 
+  };
 
-  if (minPrice || maxPrice) {
-    query.price = {};
-    if (minPrice) query.price.$gte = parseFloat(minPrice) / exchangeRate;
-    if (maxPrice) query.price.$lte = parseFloat(maxPrice) / exchangeRate;
-  }
-
-  let sortObj: any = { createdAt: -1 };
+  if (minPrice) params.minPrice = parseFloat(minPrice);
+  if (maxPrice) params.maxPrice = parseFloat(maxPrice);
   if (sort === 'salePrice') {
-    sortObj = { price: order === 'asc' ? 1 : -1 };
-  } else if (sort === 'avgRating') {
-    sortObj = { rating: -1 };
+    params.sortBy = order === 'asc' ? 'price_asc' : 'price_desc';
   }
 
-  const [dbProducts, total] = await Promise.all([
-    Product.find(query).sort(sortObj).skip(skip).limit(limitNum).lean(),
-    Product.countDocuments(query),
-  ]);
-
-  const products = dbProducts.map(p => mapToFrontendProduct(p, exchangeRate));
+  const data = await cjApiService.getProductList(params);
+  const exchangeRate = await currencyService.getUsdToInrRate();
+  const products = data.list.map(p => mapToFrontendProduct(p, exchangeRate));
 
   const responseData = {
     category: { id: cat._id, name: cat.name, slug: cat.slug, image: cat.image },
     products,
     pagination: {
-      page: pageNum, 
-      limit: limitNum, 
-      total: total,
-      totalPages: Math.ceil(total / limitNum),
+      page: data.pageNum,
+      limit: data.pageSize,
+      total: data.total,
+      totalPages: Math.ceil(data.total / data.pageSize),
+      hasNext: data.pageNum < Math.ceil(data.total / data.pageSize),
+      hasPrev: data.pageNum > 1,
     },
   };
 
@@ -299,17 +235,11 @@ export const getProductsByCategory = asyncHandler(async (req: Request, res: Resp
 // ─── All categories ───────────────────────────────────────────────────────────
 
 export const getCategories = asyncHandler(async (_req: Request, res: Response) => {
-  const categories = await Category.find({ isActive: true })
-    .sort({ sortOrder: 1 })
-    .lean();
-  res.json(ok('Categories fetched', categories));
+  res.json(ok('Categories fetched', MOCK_CATEGORIES));
 });
 
-// ─── Sync Products ────────────────────────────────────────────────────────────
-
-import { productSyncService } from '../services/productSync.service';
+// ─── Sync Products (Deprecated/Removed) ───────────────────────────────────────
 
 export const syncProducts = asyncHandler(async (_req: Request, res: Response) => {
-  const result = await productSyncService.syncProductsFromCJ();
-  res.json(ok('Products synced successfully', result));
+  res.json(ok('Sync is no longer necessary as products are fetched dynamically from CJ/Redis.', {}));
 });

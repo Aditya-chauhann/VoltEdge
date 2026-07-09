@@ -37,13 +37,10 @@ export default function CategoryPage() {
   }, [slug, page, sort]);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
       {/* Header */}
       <div className="flex items-end justify-between mb-8">
         <div>
-          {category && (
-            <p className="text-3xl mb-2">{category.icon ?? '🔌'}</p>
-          )}
           <h1 className="font-display font-bold text-3xl text-white">
             {category?.name ?? slug.replace(/-/g, ' ')}
           </h1>

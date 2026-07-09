@@ -708,7 +708,15 @@ class CjApiService {
     const page = params.page ?? 1;
     const limit = params.limit ?? 20;
     const keyword = params.keyword?.trim();
-    const resolvedParams = { ...params, page, limit, keyword };
+    let categoryId = params.categoryId;
+    let minPrice = params.minPrice;
+    
+    // If no category and no keyword provided, default to Consumer Electronics (D9E66BF8-4E81-4CAB-A425-AEDEC5FBFBF2)
+    if (!categoryId && !keyword) {
+      categoryId = 'D9E66BF8-4E81-4CAB-A425-AEDEC5FBFBF2';
+    }
+
+    const resolvedParams = { ...params, page, limit, keyword, categoryId, minPrice };
     const useV2 = Boolean(
       resolvedParams.keyword ||
         resolvedParams.sortBy ||

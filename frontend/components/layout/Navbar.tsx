@@ -95,20 +95,20 @@ export default function Navbar() {
   const navLinks = [
     { href: '/',          label: 'Home' },
     { href: '/products',  label: 'All Products' },
-    { href: '/category/smartphones-tablets', label: 'Phones' },
-    { href: '/category/laptops-computers',   label: 'Laptops' },
-    { href: '/category/headphones-earbuds',  label: 'Audio' },
+    { href: '/category/smart-electronics', label: 'Smart Electronics' },
+    { href: '/category/camera-photo',      label: 'Cameras' },
+    { href: '/category/accessories-parts', label: 'Accessories' },
   ];
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      className={`fixed top-0 left-0 right-0 w-full z-50 transition-all duration-300 ${
         isScrolled || mobileMenuOpen
-          ? 'bg-base-50/95 backdrop-blur-md shadow-lg border-b border-primary-400/10'
-          : 'bg-transparent'
+          ? 'bg-[#1A1A2E]/95 backdrop-blur-md shadow-lg border-b border-primary-400/10'
+          : 'bg-[#1A1A2E] border-b border-primary-400/5'
       }`}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
 
           {/* ── Logo ─────────────────────────────────────── */}

@@ -11,6 +11,7 @@ import { ApiError } from '../utils/ApiError';
 import { ok } from '../utils/ApiResponse';
 import { AuthRequest } from '../middleware/auth.middleware';
 import { cjApiService } from '../services/cjApi.service';
+import { User } from '../models/User.model';
 
 // ─── Add review ───────────────────────────────────────────────────────────────
 
