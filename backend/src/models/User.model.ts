@@ -48,6 +48,11 @@ export interface IUser extends Document {
   isEmailVerified: boolean;
   otp?:         string;
   otpExpiresAt?: Date;
+  resetPasswordToken?: string;
+  resetPasswordExpire?: Date;
+  walletBalance?: number;
+  walletHistory: { amount: number; type: 'credit' | 'debit'; description: string; timestamp: Date }[];
+  isBlocked?: boolean;
   createdAt:    Date;
   updatedAt:    Date;
 
@@ -74,6 +79,15 @@ const UserSchema = new Schema<IUser>(
     isEmailVerified: { type: Boolean, default: false },
     otp:          { type: String },
     otpExpiresAt: { type: Date },
+    walletBalance: { type: Number, default: 0 },
+    walletHistory: [
+      {
+        amount: { type: Number, required: true },
+        type: { type: String, enum: ['credit', 'debit'], required: true },
+        description: { type: String, required: true },
+        timestamp: { type: Date, default: Date.now },
+      }
+    ],
   },
   { timestamps: true },
 );

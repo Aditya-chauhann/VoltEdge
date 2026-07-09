@@ -16,23 +16,26 @@ export default function HomePage() {
   const [newArrivals, setNewArrivals] = useState<Product[]>([]);
   const [deals,       setDeals]       = useState<Product[]>([]);
   const [categories,  setCategories]  = useState<Category[]>([]);
+  const [banners,     setBanners]     = useState<any[]>([]);
   const [isLoading,   setIsLoading]   = useState(true);
 
   useEffect(() => {
     async function fetchAll() {
       setIsLoading(true);
       try {
-        const [trendRes, bestRes, newRes, catRes] = await Promise.all([
+        const [trendRes, bestRes, newRes, catRes, bannerRes] = await Promise.all([
           productsApi.list({ trending: 'true', limit: '10', status: 'active' }),
           productsApi.list({ bestSeller: 'true', limit: '10', status: 'active' }),
           productsApi.list({ newArrival: 'true', limit: '10', status: 'active', sort: 'createdAt', order: 'desc' }),
           productsApi.getCategories(),
+          productsApi.getBanners(),
         ]);
 
         setTrending(trendRes.data.data.products);
         setBestSellers(bestRes.data.data.products);
         setNewArrivals(newRes.data.data.products);
         setCategories(catRes.data.data);
+        setBanners(bannerRes.data.data);
 
         // Use best sellers for "Today's Deals" (in a real app these would have specific deal flags)
         setDeals(bestRes.data.data.products.slice(0, 5));
@@ -47,7 +50,7 @@ export default function HomePage() {
 
   return (
     <>
-      <HeroSection />
+      <HeroSection banners={banners} />
       <TrustBadges />
       <TodaysDeals products={deals} isLoading={isLoading} />
       <CategorySection categories={categories} />

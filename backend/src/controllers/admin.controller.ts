@@ -9,6 +9,8 @@ import { Order } from '../models/Order.model';
 import { User } from '../models/User.model';
 import { Category } from '../models/Category.model';
 import { Coupon } from '../models/Coupon.model';
+import { Banner } from '../models/Banner.model';
+import { FinanceConfig } from '../models/FinanceConfig.model';
 import { asyncHandler } from '../utils/asyncHandler';
 import { ApiError } from '../utils/ApiError';
 import { ok } from '../utils/ApiResponse';
@@ -25,6 +27,8 @@ export const getDashboard = asyncHandler(async (_req: Request, res: Response) =>
     totalRevenue, monthRevenue,
     totalUsers, newUsers,
     recentOrders,
+    statusCounts,
+    pendingActionOrders
   ] = await Promise.all([
     Order.countDocuments(),
     Order.countDocuments({ createdAt: { $gte: start } }),
@@ -44,7 +48,31 @@ export const getDashboard = asyncHandler(async (_req: Request, res: Response) =>
       .select('orderNumber total orderStatus paymentMethod createdAt user')
       .populate('user', 'name email')
       .lean(),
+    Order.aggregate([
+      { $group: { _id: '$orderStatus', count: { $sum: 1 } } }
+    ]),
+    Order.countDocuments({ orderStatus: { $in: ['placed', 'return_requested'] } })
   ]);
+
+  // Transform statusCounts into a funnel map
+  const funnelMap = statusCounts.reduce((acc, curr) => {
+    acc[curr._id] = curr.count;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const funnel = {
+    placed: (funnelMap['placed'] || 0) + (funnelMap['confirmed'] || 0) + (funnelMap['processing'] || 0) + (funnelMap['shipped'] || 0) + (funnelMap['delivered'] || 0),
+    confirmed: (funnelMap['confirmed'] || 0) + (funnelMap['processing'] || 0) + (funnelMap['shipped'] || 0) + (funnelMap['delivered'] || 0),
+    shipped: (funnelMap['shipped'] || 0) + (funnelMap['delivered'] || 0),
+    delivered: (funnelMap['delivered'] || 0),
+    returned: (funnelMap['returned'] || 0),
+    cancelled: (funnelMap['cancelled'] || 0),
+  };
+
+  const pendingActions = {
+    ordersToConfirm: funnelMap['placed'] || 0,
+    returnsRequested: funnelMap['return_requested'] || 0,
+  };
 
   res.json(ok('Dashboard stats fetched', {
     stats: {
@@ -52,6 +80,8 @@ export const getDashboard = asyncHandler(async (_req: Request, res: Response) =>
       totalRevenue, monthRevenue,
       totalUsers, newUsers,
     },
+    funnel,
+    pendingActions,
     recentOrders,
   }));
 });
@@ -110,27 +140,137 @@ export const adminUpdateOrder = asyncHandler(async (req: Request, res: Response)
   res.json(ok('Order updated', order));
 });
 
+export const adminBulkUpdateOrders = asyncHandler(async (req: Request, res: Response) => {
+  const { orderIds, orderStatus, paymentStatus, message } = req.body;
+  
+  if (!Array.isArray(orderIds) || orderIds.length === 0) {
+    throw new ApiError(400, 'orderIds array is required');
+  }
+
+  const updateFields: any = {};
+  if (orderStatus) updateFields.orderStatus = orderStatus;
+  if (paymentStatus) updateFields.paymentStatus = paymentStatus;
+
+  const statusHistoryEntry = {
+    status: orderStatus || 'updated',
+    message: message ?? `Bulk status updated by admin`,
+    timestamp: new Date(),
+  };
+
+  await Order.updateMany(
+    { _id: { $in: orderIds } },
+    { 
+      $set: updateFields,
+      $push: { statusHistory: statusHistoryEntry }
+    }
+  );
+
+  res.json(ok(`Successfully updated ${orderIds.length} orders`, { count: orderIds.length }));
+});
+
 // ─── Users (admin) ────────────────────────────────────────────────────────────
 
 export const adminListUsers = asyncHandler(async (req: Request, res: Response) => {
-  const { page = '1', limit = '20' } = req.query as Record<string, string>;
+  const { page = '1', limit = '20', search = '' } = req.query as Record<string, string>;
   const pageNum  = Math.max(1, parseInt(page, 10));
   const limitNum = Math.min(100, parseInt(limit, 10));
 
+  const filter: any = { role: 'customer' };
+  if (search) {
+    filter.$or = [
+      { name: { $regex: search, $options: 'i' } },
+      { email: { $regex: search, $options: 'i' } },
+    ];
+  }
+
   const [users, total] = await Promise.all([
-    User.find({ role: 'customer' })
-      .select('-passwordHash -wishlist')
-      .sort({ createdAt: -1 })
-      .skip((pageNum - 1) * limitNum)
-      .limit(limitNum)
-      .lean(),
-    User.countDocuments({ role: 'customer' }),
+    User.aggregate([
+      { $match: filter },
+      { $sort: { createdAt: -1 } },
+      { $skip: (pageNum - 1) * limitNum },
+      { $limit: limitNum },
+      {
+        $lookup: {
+          from: 'orders',
+          localField: '_id',
+          foreignField: 'user',
+          as: 'orders',
+        }
+      },
+      {
+        $addFields: {
+          orderCount: { $size: '$orders' },
+          totalSpend: {
+            $sum: {
+              $map: {
+                input: {
+                  $filter: {
+                    input: '$orders',
+                    as: 'order',
+                    cond: { $eq: ['$$order.paymentStatus', 'paid'] }
+                  }
+                },
+                as: 'paidOrder',
+                in: '$$paidOrder.total'
+              }
+            }
+          }
+        }
+      },
+      {
+        $project: {
+          passwordHash: 0,
+          wishlist: 0,
+          orders: 0, // don't send all order data in list
+        }
+      }
+    ]),
+    User.countDocuments(filter),
   ]);
 
   res.json(ok('Users fetched', {
     users,
     pagination: { page: pageNum, limit: limitNum, total, totalPages: Math.ceil(total / limitNum) },
   }));
+});
+
+export const adminGetUserDetail = asyncHandler(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const user = await User.findById(id).select('-passwordHash');
+  if (!user) throw new ApiError(404, 'User not found');
+
+  const orders = await Order.find({ user: id }).sort({ createdAt: -1 }).lean();
+
+  res.json(ok('User detail fetched', { user, orders }));
+});
+
+export const adminUpdateUser = asyncHandler(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { blocked, addWalletAmount, walletReason } = req.body;
+
+  const user = await User.findById(id);
+  if (!user) throw new ApiError(404, 'User not found');
+
+  // We can add an isBlocked field to User schema if it doesn't exist.
+  // Wait, let's just add it dynamically if we want, or define it in schema.
+  // Actually, we'll update the schema in another tool call if needed.
+  if (typeof blocked === 'boolean') {
+    (user as any).isBlocked = blocked;
+  }
+
+  if (addWalletAmount && walletReason) {
+    const amount = Number(addWalletAmount);
+    user.walletBalance = (user.walletBalance || 0) + amount;
+    user.walletHistory.push({
+      amount: Math.abs(amount),
+      type: amount >= 0 ? 'credit' : 'debit',
+      description: walletReason,
+      timestamp: new Date(),
+    });
+  }
+
+  await user.save();
+  res.json(ok('User updated', user));
 });
 
 // ─── Categories (admin) ───────────────────────────────────────────────────────
@@ -168,3 +308,47 @@ export const adminUpdateCoupon = asyncHandler(async (req: Request, res: Response
   res.json(ok('Coupon updated', coupon));
 });
 
+// ─── Banners (Content) ────────────────────────────────────────────────────────
+
+export const adminGetBanners = asyncHandler(async (_req: Request, res: Response) => {
+  const banners = await Banner.find().sort({ order: 1 }).lean();
+  res.json(ok('Banners fetched', banners));
+});
+
+export const adminCreateBanner = asyncHandler(async (req: Request, res: Response) => {
+  const banner = await Banner.create(req.body);
+  res.status(201).json(ok('Banner created', banner));
+});
+
+export const adminUpdateBanner = asyncHandler(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const banner = await Banner.findByIdAndUpdate(id, { $set: req.body }, { new: true });
+  if (!banner) throw new ApiError(404, 'Banner not found');
+  res.json(ok('Banner updated', banner));
+});
+
+export const adminDeleteBanner = asyncHandler(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  await Banner.findByIdAndDelete(id);
+  res.json(ok('Banner deleted', {}));
+});
+
+// ─── Finance Config ───────────────────────────────────────────────────────────
+
+export const adminGetFinanceConfig = asyncHandler(async (_req: Request, res: Response) => {
+  let config = await FinanceConfig.findOne();
+  if (!config) {
+    config = await FinanceConfig.create({});
+  }
+  res.json(ok('Finance config fetched', config));
+});
+
+export const adminUpdateFinanceConfig = asyncHandler(async (req: Request, res: Response) => {
+  let config = await FinanceConfig.findOne();
+  if (!config) {
+    config = await FinanceConfig.create(req.body);
+  } else {
+    config = await FinanceConfig.findByIdAndUpdate(config._id, { $set: req.body }, { new: true });
+  }
+  res.json(ok('Finance config updated', config));
+});

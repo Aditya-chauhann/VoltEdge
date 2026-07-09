@@ -23,6 +23,7 @@
     "react-hot-toast": "^2.4.1",
     "react-image-magnify": "^2.7.4",
     "react-star-ratings": "^2.3.0",
+    "recharts": "^3.9.2",
     "sharp": "^0.35.3",
     "swiper": "^11.1.4",
     "tailwind-merge": "^2.3.0",

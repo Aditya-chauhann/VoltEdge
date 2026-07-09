@@ -104,6 +104,8 @@ export const productsApi = {
     apiClient.get(`/products/category/${slug}`, { params }),
 
   getCategories: () => apiClient.get('/products/categories'),
+
+  getBanners: () => apiClient.get('/products/banners'),
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -175,11 +177,14 @@ export const couponsApi = {
 export const adminApi = {
   dashboard:        () => apiClient.get('/admin/dashboard'),
   orders:           (params?: object) => apiClient.get('/admin/orders', { params }),
+  bulkUpdateOrders: (data: object) => apiClient.post('/admin/orders/bulk-update', data),
   updateOrder:      (id: string, data: object) => apiClient.put(`/admin/orders/${id}`, data),
   products:         (params?: object) => apiClient.get('/admin/products', { params }),
   updateProduct:    (id: string, data: object) => apiClient.put(`/admin/products/${id}`, data),
   deleteProduct:    (id: string) => apiClient.delete(`/admin/products/${id}`),
   users:            (params?: object) => apiClient.get('/admin/users', { params }),
+  getUser:          (id: string) => apiClient.get(`/admin/users/${id}`),
+  updateUser:       (id: string, data: object) => apiClient.put(`/admin/users/${id}`, data),
   triggerSync:      () => apiClient.post('/admin/sync'),
   syncLogs:         (params?: object) => apiClient.get('/admin/sync-logs', { params }),
   createCategory:   (data: object) => apiClient.post('/admin/categories', data),
@@ -187,6 +192,16 @@ export const adminApi = {
   coupons:          () => apiClient.get('/admin/coupons'),
   createCoupon:     (data: object) => apiClient.post('/admin/coupons', data),
   updateCoupon:     (id: string, data: object) => apiClient.put(`/admin/coupons/${id}`, data),
+  
+  // Content
+  banners:          () => apiClient.get('/admin/banners'),
+  createBanner:     (data: object) => apiClient.post('/admin/banners', data),
+  updateBanner:     (id: string, data: object) => apiClient.put(`/admin/banners/${id}`, data),
+  deleteBanner:     (id: string) => apiClient.delete(`/admin/banners/${id}`),
+
+  // Finance
+  financeConfig:    () => apiClient.get('/admin/finance'),
+  updateFinance:    (data: object) => apiClient.put('/admin/finance', data),
 };
 
 export default apiClient;

@@ -5,6 +5,14 @@ import { ApiError } from '../utils/ApiError';
 import { ok } from '../utils/ApiResponse';
 import { currencyService } from '../services/currency.service';
 import { env } from '../config/env';
+import { Banner } from '../models/Banner.model';
+
+// ─── Public Endpoints ─────────────────────────────────────────────────────────
+
+export const getBanners = asyncHandler(async (_req: Request, res: Response) => {
+  const banners = await Banner.find({ isActive: true }).sort({ order: 1 }).lean();
+  res.json(ok('Banners fetched', banners));
+});
 
 // Static categories fallback with valid MongoDB ObjectIds
 const MOCK_CATEGORIES = [

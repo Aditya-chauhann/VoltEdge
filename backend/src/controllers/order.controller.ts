@@ -26,7 +26,7 @@ function calculateTotals(
   discount: number,
 ) {
   const subtotal = items.reduce((sum, i) => sum + i.unitPrice * i.qty, 0);
-  const total    = Math.max(0, subtotal + shippingFee - discount);
+  const total = Math.max(0, subtotal + shippingFee - discount);
   return { subtotal, shippingFee, discount, total };
 }
 
@@ -36,13 +36,13 @@ function buildShippingAddress(rawAddress: {
 }) {
   return {
     fullName: rawAddress.fullName,
-    phone:    rawAddress.phone,
-    line1:    rawAddress.line1,
-    line2:    rawAddress.line2,
-    city:     rawAddress.city,
-    state:    rawAddress.state,
-    pincode:  rawAddress.pincode,
-    country:  rawAddress.country ?? 'India',
+    phone: rawAddress.phone,
+    line1: rawAddress.line1,
+    line2: rawAddress.line2,
+    city: rawAddress.city,
+    state: rawAddress.state,
+    pincode: rawAddress.pincode,
+    country: rawAddress.country ?? 'India',
   };
 }
 
@@ -86,14 +86,14 @@ async function buildOrderItems(userId: string) {
     const priceInr = Number((currentPrice * rate).toFixed(2));
 
     orderItems.push({
-      productId:   product.pid,
-      title:       product.productName || product.productNameEn,
-      image:       images[0] ?? '',
-      variantId:   item.variantId,
+      productId: product.pid,
+      title: product.productName || product.productNameEn,
+      image: images[0] ?? '',
+      variantId: item.variantId,
       variantName: variantName,
-      qty:         item.qty,
-      unitPrice:   priceInr,
-      total:       priceInr * item.qty,
+      qty: item.qty,
+      unitPrice: priceInr,
+      total: priceInr * item.qty,
       cjProductId: product.pid,
       cjVariantId: item.variantId || fallbackVariantId,
     });
@@ -126,13 +126,13 @@ export const createRazorpayOrderHandler = asyncHandler(async (req: AuthRequest, 
   const { orderItems, cart } = await buildOrderItems(req.user!.id);
 
   const shippingFee = 0; // Free shipping
-  const discount    = cart.couponDiscount ?? 0;
+  const discount = cart.couponDiscount ?? 0;
   const { subtotal, total } = calculateTotals(orderItems, shippingFee, discount);
 
   if (total < 1) throw new ApiError(400, 'Order total must be at least ₹1');
 
-  const orderNumber  = generateOrderNumber();
-  const rzpOrder     = await createRazorpayOrder(total, orderNumber);
+  const orderNumber = generateOrderNumber();
+  const rzpOrder = await createRazorpayOrder(total, orderNumber);
 
   // Lock the cart during checkout
   await Cart.findOneAndUpdate({ user: req.user!.id }, { lockedForCheckout: true });
@@ -140,27 +140,27 @@ export const createRazorpayOrderHandler = asyncHandler(async (req: AuthRequest, 
   // Create a pending order in DB
   const order = await Order.create({
     orderNumber,
-    user:            req.user!.id,
-    items:           orderItems,
+    user: req.user!.id,
+    items: orderItems,
     shippingAddress: shippingAddr,
     subtotal,
     shippingFee,
     discount,
-    couponCode:      cart.couponCode,
+    couponCode: cart.couponCode,
     total,
-    paymentMethod:    'razorpay',
-    paymentStatus:    'pending',
-    razorpayOrderId:  rzpOrder.id,
-    orderStatus:      'placed',
+    paymentMethod: 'razorpay',
+    paymentStatus: 'pending',
+    razorpayOrderId: rzpOrder.id,
+    orderStatus: 'placed',
     statusHistory: [{ status: 'placed', message: 'Order created, awaiting payment', timestamp: new Date() }],
   });
 
   res.json(ok('Razorpay order created', {
-    orderId:    order._id,
+    orderId: order._id,
     orderNumber: order.orderNumber,
     razorpayOrderId: rzpOrder.id,
-    amount:     rzpOrder.amount,  // paise
-    currency:   'INR',
+    amount: rzpOrder.amount,  // paise
+    currency: 'INR',
     total,
   }));
 });
@@ -196,13 +196,13 @@ export const verifyRazorpayPayment = asyncHandler(async (req: AuthRequest, res: 
   }
 
   // Mark as paid
-  order.paymentStatus      = 'paid';
-  order.razorpayPaymentId  = razorpayPaymentId;
-  order.razorpaySignature  = razorpaySignature;
-  order.orderStatus        = 'confirmed';
+  order.paymentStatus = 'paid';
+  order.razorpayPaymentId = razorpayPaymentId;
+  order.razorpaySignature = razorpaySignature;
+  order.orderStatus = 'confirmed';
   order.statusHistory.push({
-    status:    'confirmed',
-    message:   'Payment received — order confirmed',
+    status: 'confirmed',
+    message: 'Payment received — order confirmed',
     timestamp: new Date(),
   });
   await order.save();
@@ -232,8 +232,8 @@ export const verifyRazorpayPayment = asyncHandler(async (req: AuthRequest, res: 
   cjApiService.createOrder(cjPayload).then(async (result) => {
     if (result) {
       await Order.findByIdAndUpdate(order._id, {
-        cjOrderId:      result.orderId,
-        orderStatus:    'processing',
+        cjOrderId: result.orderId,
+        orderStatus: 'processing',
         $push: {
           statusHistory: {
             status: 'processing',
@@ -247,7 +247,7 @@ export const verifyRazorpayPayment = asyncHandler(async (req: AuthRequest, res: 
 
   res.json(ok('Payment verified — order confirmed!', {
     orderNumber: order.orderNumber,
-    orderId:     order._id,
+    orderId: order._id,
   }));
 });
 
@@ -274,26 +274,26 @@ export const placeCODOrder = asyncHandler(async (req: AuthRequest, res: Response
 
   const { orderItems, cart } = await buildOrderItems(req.user!.id);
 
-  const discount  = cart.couponDiscount ?? 0;
+  const discount = cart.couponDiscount ?? 0;
   const { subtotal, total } = calculateTotals(orderItems, 0, discount);
 
   const orderNumber = generateOrderNumber();
 
   const order = await Order.create({
     orderNumber,
-    user:            req.user!.id,
-    items:           orderItems,
+    user: req.user!.id,
+    items: orderItems,
     shippingAddress: shippingAddr,
     subtotal,
-    shippingFee:     0,
+    shippingFee: 0,
     discount,
-    couponCode:      cart.couponCode,
+    couponCode: cart.couponCode,
     total,
-    paymentMethod:   'cod',
-    paymentStatus:   'pending',
-    orderStatus:     'confirmed',
+    paymentMethod: 'cod',
+    paymentStatus: 'pending',
+    orderStatus: 'confirmed',
     statusHistory: [
-      { status: 'placed',    message: 'COD order placed',            timestamp: new Date() },
+      { status: 'placed', message: 'COD order placed', timestamp: new Date() },
       { status: 'confirmed', message: 'Order confirmed — pay on delivery', timestamp: new Date() },
     ],
   });
@@ -308,7 +308,7 @@ export const placeCODOrder = asyncHandler(async (req: AuthRequest, res: Response
   const cjPayload = {
     orderNumber: order.orderNumber,
     shippingZip: order.shippingAddress.pincode,
-    shippingCountryCode: 'IN', // Assuming IN for now
+    shippingCountryCode: 'IN',
     shippingCountry: order.shippingAddress.country,
     shippingProvince: order.shippingAddress.state,
     shippingCity: order.shippingAddress.city,
@@ -323,12 +323,12 @@ export const placeCODOrder = asyncHandler(async (req: AuthRequest, res: Response
   cjApiService.createOrder(cjPayload).then(async (result) => {
     if (result) {
       await Order.findByIdAndUpdate(order._id, {
-        cjOrderId:   result.orderId,
+        cjOrderId: result.orderId,
         orderStatus: 'processing',
         $push: {
           statusHistory: {
-            status:    'processing',
-            message:   'Order sent to supplier',
+            status: 'processing',
+            message: 'Order sent to supplier',
             timestamp: new Date(),
           },
         },
@@ -338,7 +338,7 @@ export const placeCODOrder = asyncHandler(async (req: AuthRequest, res: Response
 
   res.status(201).json(ok('COD order placed successfully!', {
     orderNumber: order.orderNumber,
-    orderId:     order._id,
+    orderId: order._id,
   }));
 });
 
@@ -346,7 +346,7 @@ export const placeCODOrder = asyncHandler(async (req: AuthRequest, res: Response
 
 export const listOrders = asyncHandler(async (req: AuthRequest, res: Response) => {
   const { page = '1', limit = '10' } = req.query as Record<string, string>;
-  const pageNum  = Math.max(1, parseInt(page, 10));
+  const pageNum = Math.max(1, parseInt(page, 10));
   const limitNum = Math.min(50, parseInt(limit, 10));
 
   const [orders, total] = await Promise.all([
@@ -394,8 +394,8 @@ export const cancelOrder = asyncHandler(async (req: AuthRequest, res: Response) 
 
   order.orderStatus = 'cancelled';
   order.statusHistory.push({
-    status:    'cancelled',
-    message:   req.body.reason ?? 'Cancelled by customer',
+    status: 'cancelled',
+    message: req.body.reason ?? 'Cancelled by customer',
     timestamp: new Date(),
   });
   await order.save();
@@ -417,8 +417,8 @@ export const requestReturn = asyncHandler(async (req: AuthRequest, res: Response
 
   order.orderStatus = 'return_requested';
   order.statusHistory.push({
-    status:    'return_requested',
-    message:   req.body.reason ?? 'Return requested by customer',
+    status: 'return_requested',
+    message: req.body.reason ?? 'Return requested by customer',
     timestamp: new Date(),
   });
   await order.save();

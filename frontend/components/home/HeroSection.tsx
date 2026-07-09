@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, ChevronLeft, ChevronRight, Zap, Shield, Truck } from 'lucide-react';
 import Image from 'next/image';
 
-const slides = [
+const DEFAULT_SLIDES = [
   {
     id:          1,
     badge:       '🔥 Hot Deal',
@@ -128,11 +128,26 @@ const imageVariants = {
   }),
 };
 
-export default function HeroSection() {
+export default function HeroSection({ banners }: { banners?: any[] }) {
   const [current, setCurrent] = useState(0);
   const [direction, setDirection] = useState(1);
   const [isPaused, setIsPaused] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+
+  // Map dynamic banners to the structure expected by the hero, fallback to default
+  const slides = (banners && banners.length > 0) 
+    ? banners.map((b, i) => ({
+        id: b._id,
+        badge: 'Featured',
+        headline: b.headline,
+        subheadline: b.subtext || '',
+        description: '',
+        cta: { label: b.buttonLabel || 'Shop Now', href: b.buttonLink || '/shop' },
+        accent: '#6C63FF', // Use a default or dynamic accent if available
+        image: b.imageUrl,
+        overlayOpacity: b.overlayDarkness / 100
+      }))
+    : DEFAULT_SLIDES;
 
   const slide = slides[current];
 
@@ -151,7 +166,7 @@ export default function HeroSection() {
     setTimeout(() => {
       setIsAnimating(false);
     }, 1000);
-  }, [isAnimating]);
+  }, [slides.length, isAnimating]);
 
   // Auto-advance slides
   useEffect(() => {
@@ -289,8 +304,11 @@ export default function HeroSection() {
                         alt={slide.headline} 
                         fill 
                         className="object-cover"
-                        style={{ mixBlendMode: 'screen' }}
+                        unoptimized={slide.image.startsWith('http')} // needed for external unsplash URLs
                       />
+                      {(slide as any).overlayOpacity !== undefined && (
+                        <div className="absolute inset-0 bg-black" style={{ opacity: (slide as any).overlayOpacity }} />
+                      )}
                     </div>
 
                     {/* Floating badges - fixed relative to the 3D rotating parent */}

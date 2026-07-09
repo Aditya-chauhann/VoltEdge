@@ -1,9 +1,11 @@
 import { Router } from 'express';
 import {
-  getDashboard, adminListOrders, adminUpdateOrder,
-  adminListUsers,
+  getDashboard, adminListOrders, adminUpdateOrder, adminBulkUpdateOrders,
+  adminListUsers, adminGetUserDetail, adminUpdateUser,
   adminCreateCategory, adminUpdateCategory,
   adminCreateCoupon, adminListCoupons, adminUpdateCoupon,
+  adminGetBanners, adminCreateBanner, adminUpdateBanner, adminDeleteBanner,
+  adminGetFinanceConfig, adminUpdateFinanceConfig
 } from '../controllers/admin.controller';
 import { protect } from '../middleware/auth.middleware';
 import { adminOnly } from '../middleware/admin.middleware';
@@ -18,18 +20,31 @@ router.get('/dashboard',               getDashboard);
 
 // Orders
 router.get('/orders',                  adminListOrders);
+router.post('/orders/bulk-update',     adminBulkUpdateOrders);
 router.put('/orders/:id',              adminUpdateOrder);
 
 // Users
 router.get('/users',                   adminListUsers);
+router.get('/users/:id',               adminGetUserDetail);
+router.put('/users/:id',               adminUpdateUser);
 
 // Categories
 router.post('/categories',             adminCreateCategory);
 router.put('/categories/:id',          adminUpdateCategory);
 
 // Coupons
-router.get('/coupons',                 adminListCoupons);
 router.post('/coupons',                adminCreateCoupon);
+router.get('/coupons',                 adminListCoupons);
 router.put('/coupons/:id',             adminUpdateCoupon);
+
+// Content (Banners)
+router.get('/banners',                 adminGetBanners);
+router.post('/banners',                adminCreateBanner);
+router.put('/banners/:id',             adminUpdateBanner);
+router.delete('/banners/:id',          adminDeleteBanner);
+
+// Finance
+router.get('/finance',                 adminGetFinanceConfig);
+router.put('/finance',                 adminUpdateFinanceConfig);
 
 export default router;
