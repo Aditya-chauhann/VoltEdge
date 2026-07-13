@@ -14,7 +14,7 @@ const categories = [
 
 const support = [
   { name: 'My Orders',     href: '/account/orders' },
-  { name: 'Refund/Shipping Policy', href: '/refund-shipping-policy' },
+  { name: 'Return Policy', href: '/return-policy' },
   { name: 'Track Order',   href: '/account/orders' },
   { name: 'Contact Us',    href: 'mailto:support@voltedge.in' },
 ];
