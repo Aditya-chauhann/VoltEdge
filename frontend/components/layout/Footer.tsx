@@ -22,7 +22,7 @@ const support = [
 const legal = [
   { name: 'Privacy Policy',          href: '/privacy-policy' },
   { name: 'Terms of Service',        href: '/terms-of-service' },
-  { name: 'Refund/Shipping Policy',  href: '/refund-shipping-policy' },
+  { name: 'Return Policy',           href: '/return-policy' },
 ];
 
 export default function Footer() {
