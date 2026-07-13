@@ -217,9 +217,9 @@ export default function AuthModal() {
 
                   <form onSubmit={handleLogin} className="space-y-4">
                     <InputField icon={<Mail size={16} />} type="email" placeholder="Email address"
-                      value={form.email} onChange={(v) => updateField('email', v)} />
+                      value={form.email} onChange={(v) => updateField('email', v)} required />
                     <InputField icon={<Lock size={16} />} type={showPassword ? 'text' : 'password'}
-                      placeholder="Password" value={form.password} onChange={(v) => updateField('password', v)}
+                      placeholder="Password" value={form.password} onChange={(v) => updateField('password', v)} required minLength={6}
                       suffix={
                         <button type="button" onClick={() => setShowPassword(!showPassword)}
                           className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:text-white transition-colors">
@@ -256,13 +256,13 @@ export default function AuthModal() {
 
                   <form onSubmit={handleRegister} className="space-y-3">
                     <InputField icon={<User size={16} />} type="text" placeholder="Full name"
-                      value={form.name} onChange={(v) => updateField('name', v)} />
+                      value={form.name} onChange={(v) => updateField('name', v)} required />
                     <InputField icon={<Mail size={16} />} type="email" placeholder="Email address"
-                      value={form.email} onChange={(v) => updateField('email', v)} />
+                      value={form.email} onChange={(v) => updateField('email', v)} required />
                     <InputField icon={<Phone size={16} />} type="tel" placeholder="Phone (optional)"
-                      value={form.phone} onChange={(v) => updateField('phone', v)} />
+                      value={form.phone} onChange={(v) => updateField('phone', v)} pattern="[0-9]{10,15}" title="Enter a valid phone number (10-15 digits)" />
                     <InputField icon={<Lock size={16} />} type={showPassword ? 'text' : 'password'}
-                      placeholder="Password (min 6 chars)" value={form.password} onChange={(v) => updateField('password', v)}
+                      placeholder="Password (min 6 chars)" value={form.password} onChange={(v) => updateField('password', v)} required minLength={6}
                       suffix={
                         <button type="button" onClick={() => setShowPassword(!showPassword)}
                           className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:text-white transition-colors">
@@ -271,7 +271,7 @@ export default function AuthModal() {
                       }
                     />
                     <InputField icon={<Lock size={16} />} type="password" placeholder="Confirm password"
-                      value={form.confirmPassword} onChange={(v) => updateField('confirmPassword', v)} />
+                      value={form.confirmPassword} onChange={(v) => updateField('confirmPassword', v)} required minLength={6} />
                     <InputField icon={<Lock size={16} />} type="password" placeholder="Admin Secret Code (optional)"
                       value={form.adminSecret} onChange={(v) => updateField('adminSecret', v)} />
                     <button type="submit" disabled={isLoading}
@@ -300,7 +300,7 @@ export default function AuthModal() {
 
                   <form onSubmit={handleVerifyOtp} className="space-y-4">
                     <InputField icon={<Mail size={16} />} type="text" placeholder="6-digit OTP code"
-                      value={form.otp} onChange={(v) => updateField('otp', v)} />
+                      value={form.otp} onChange={(v) => updateField('otp', v)} required pattern="[0-9]{6}" title="Enter 6 digit OTP" />
                     <button type="submit" disabled={isLoading}
                       className="btn-primary w-full flex items-center justify-center gap-2">
                       {isLoading ? <Spinner /> : 'Verify & Login'}
@@ -320,7 +320,7 @@ export default function AuthModal() {
 
                   <form onSubmit={handleForgotCheck} className="space-y-4">
                     <InputField icon={<Mail size={16} />} type="email" placeholder="Your registered email"
-                      value={forgotEmail} onChange={setForgotEmail} />
+                      value={forgotEmail} onChange={setForgotEmail} required />
                     <button type="submit" disabled={isLoading}
                       className="btn-primary w-full flex items-center justify-center gap-2">
                       {isLoading ? <Spinner /> : 'Continue'}
@@ -337,7 +337,7 @@ export default function AuthModal() {
 
                   <form onSubmit={handleForgotReset} className="space-y-4">
                     <InputField icon={<Lock size={16} />} type={showPassword ? 'text' : 'password'}
-                      placeholder="New password" value={form.newPassword} onChange={(v) => updateField('newPassword', v)}
+                      placeholder="New password" value={form.newPassword} onChange={(v) => updateField('newPassword', v)} required minLength={6}
                       suffix={
                         <button type="button" onClick={() => setShowPassword(!showPassword)}
                           className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:text-white transition-colors">
@@ -346,7 +346,7 @@ export default function AuthModal() {
                       }
                     />
                     <InputField icon={<Lock size={16} />} type="password" placeholder="Confirm new password"
-                      value={form.confirmPassword} onChange={(v) => updateField('confirmPassword', v)} />
+                      value={form.confirmPassword} onChange={(v) => updateField('confirmPassword', v)} required minLength={6} />
                     <button type="submit" disabled={isLoading}
                       className="btn-primary w-full flex items-center justify-center gap-2">
                       {isLoading ? <Spinner /> : 'Reset Password'}
@@ -382,7 +382,7 @@ export default function AuthModal() {
 }
 
 function InputField({
-  icon, type, placeholder, value, onChange, suffix,
+  icon, type, placeholder, value, onChange, suffix, ...rest
 }: {
   icon: React.ReactNode;
   type: string;
@@ -390,7 +390,7 @@ function InputField({
   value: string;
   onChange: (v: string) => void;
   suffix?: React.ReactNode;
-}) {
+} & Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'>) {
   return (
     <div className="relative flex items-center">
       <div className="absolute left-3 text-gray-600 dark:text-gray-400 pointer-events-none">{icon}</div>
@@ -401,6 +401,7 @@ function InputField({
         onChange={(e) => onChange(e.target.value)}
         className="input-field pl-10 pr-10"
         autoComplete={type === 'password' ? 'current-password' : undefined}
+        {...rest}
       />
       {suffix && (
         <div className="absolute right-3 flex items-center">{suffix}</div>

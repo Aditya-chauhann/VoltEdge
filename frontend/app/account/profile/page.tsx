@@ -101,6 +101,7 @@ export default function ProfilePage() {
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Full name"
                 className="input-field pl-9"
+                required
               />
             </div>
             <div className="relative">
@@ -111,6 +112,9 @@ export default function ProfilePage() {
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="Phone number"
                 className="input-field pl-9"
+                pattern="[0-9]{10,15}"
+                title="Enter a valid phone number"
+                required
               />
             </div>
             <div className="flex gap-2">
@@ -147,23 +151,27 @@ export default function ProfilePage() {
 
         {/* Add address form */}
         {showAddrForm && (
-          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
-            className="mb-5 p-5 bg-white dark:bg-base-100 rounded-xl space-y-3">
+          <motion.form 
+            initial={{ opacity: 0, height: 0 }} 
+            animate={{ opacity: 1, height: 'auto' }}
+            className="mb-5 p-5 bg-white dark:bg-base-100 rounded-xl space-y-3"
+            onSubmit={(e) => { e.preventDefault(); addAddress(); }}
+          >
             <div className="grid grid-cols-2 gap-3">
               <input className="input-field col-span-2 text-sm" placeholder="Full name *" value={addrForm.fullName}
-                onChange={(e) => setAddrForm({ ...addrForm, fullName: e.target.value })} />
-              <input className="input-field text-sm" placeholder="Phone *" value={addrForm.phone}
-                onChange={(e) => setAddrForm({ ...addrForm, phone: e.target.value })} />
-              <input className="input-field text-sm" placeholder="Pincode *" value={addrForm.pincode}
-                onChange={(e) => setAddrForm({ ...addrForm, pincode: e.target.value })} />
+                onChange={(e) => setAddrForm({ ...addrForm, fullName: e.target.value })} required />
+              <input className="input-field text-sm" placeholder="Phone *" value={addrForm.phone} type="tel" pattern="[0-9]{10,15}" title="Enter a valid phone number"
+                onChange={(e) => setAddrForm({ ...addrForm, phone: e.target.value })} required />
+              <input className="input-field text-sm" placeholder="Pincode *" value={addrForm.pincode} pattern="[0-9A-Za-z\s\-]{4,10}" title="Enter a valid pincode"
+                onChange={(e) => setAddrForm({ ...addrForm, pincode: e.target.value })} required />
               <input className="input-field col-span-2 text-sm" placeholder="Address line 1 *" value={addrForm.line1}
-                onChange={(e) => setAddrForm({ ...addrForm, line1: e.target.value })} />
+                onChange={(e) => setAddrForm({ ...addrForm, line1: e.target.value })} required />
               <input className="input-field col-span-2 text-sm" placeholder="Address line 2" value={addrForm.line2}
                 onChange={(e) => setAddrForm({ ...addrForm, line2: e.target.value })} />
               <input className="input-field text-sm" placeholder="City *" value={addrForm.city}
-                onChange={(e) => setAddrForm({ ...addrForm, city: e.target.value })} />
+                onChange={(e) => setAddrForm({ ...addrForm, city: e.target.value })} required />
               <input className="input-field text-sm" placeholder="State *" value={addrForm.state}
-                onChange={(e) => setAddrForm({ ...addrForm, state: e.target.value })} />
+                onChange={(e) => setAddrForm({ ...addrForm, state: e.target.value })} required />
             </div>
             <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
               <input type="checkbox" checked={!!addrForm.isDefault}
@@ -173,10 +181,10 @@ export default function ProfilePage() {
               Set as default address
             </label>
             <div className="flex gap-2">
-              <button onClick={addAddress} className="btn-primary text-sm py-2 px-4">Save Address</button>
-              <button onClick={() => setShowAddrForm(false)} className="btn-ghost text-sm py-2 px-4">Cancel</button>
+              <button type="submit" className="btn-primary text-sm py-2 px-4">Save Address</button>
+              <button type="button" onClick={() => setShowAddrForm(false)} className="btn-ghost text-sm py-2 px-4">Cancel</button>
             </div>
-          </motion.div>
+          </motion.form>
         )}
 
         {/* Address list */}
