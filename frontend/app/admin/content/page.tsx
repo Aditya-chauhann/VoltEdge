@@ -13,10 +13,9 @@ export default function AdminContentPage() {
   const [banners, setBanners] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [refundPolicy, setRefundPolicy] = useState('');
   const [privacyPolicy, setPrivacyPolicy] = useState('');
   const [termsPolicy, setTermsPolicy] = useState('');
-  const [savingPolicy, setSavingPolicy] = useState<'refund_shipping' | 'privacy' | 'terms' | null>(null);
+  const [savingPolicy, setSavingPolicy] = useState<'privacy' | 'terms' | null>(null);
 
   // Drawer
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -45,9 +44,6 @@ export default function AdminContentPage() {
 
   const fetchPolicies = async () => {
     try {
-      const refundRes = await adminApi.getPolicy('refund_shipping').catch(() => null);
-      if (refundRes?.data?.data) setRefundPolicy(refundRes.data.data.content);
-
       const privacyRes = await adminApi.getPolicy('privacy').catch(() => null);
       if (privacyRes?.data?.data) setPrivacyPolicy(privacyRes.data.data.content);
 
@@ -126,14 +122,13 @@ export default function AdminContentPage() {
     }
   };
 
-  const handleSavePolicy = async (type: 'refund_shipping' | 'privacy' | 'terms') => {
+  const handleSavePolicy = async (type: 'privacy' | 'terms') => {
     setSavingPolicy(type);
     try {
-      const content = type === 'refund_shipping' ? refundPolicy : type === 'privacy' ? privacyPolicy : termsPolicy;
+      const content = type === 'privacy' ? privacyPolicy : termsPolicy;
       await adminApi.updatePolicy(type, { content });
       toast.success(
-        type === 'refund_shipping' ? 'Refund & Shipping Policy updated' 
-        : type === 'privacy' ? 'Privacy Policy updated' 
+        type === 'privacy' ? 'Privacy Policy updated' 
         : 'Terms of Service updated'
       );
     } catch (err) {
@@ -236,20 +231,6 @@ export default function AdminContentPage() {
 
       {activeTab === 'policies' && (
         <div className="space-y-10">
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-medium text-gray-900 dark:text-white">Refund & Shipping Policy</h2>
-              <button
-                onClick={() => handleSavePolicy('refund_shipping')}
-                disabled={savingPolicy === 'refund_shipping'}
-                className="btn-primary text-sm py-2 px-6"
-              >
-                {savingPolicy === 'refund_shipping' ? 'Saving...' : 'Save Changes'}
-              </button>
-            </div>
-            <ReactQuillWrapper value={refundPolicy} onChange={setRefundPolicy} />
-          </div>
-
           <div>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-medium text-gray-900 dark:text-white">Privacy Policy</h2>
