@@ -102,10 +102,10 @@ export default function AdminContentPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-medium text-white">Homepage Banners</h2>
+        <h2 className="text-xl font-medium text-gray-900 dark:text-white">Homepage Banners</h2>
         <button
           onClick={handleOpenCreate}
-          className="flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-500 text-white rounded-lg transition-colors font-medium text-sm"
+          className="flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-500 text-gray-900 dark:text-white rounded-lg transition-colors font-medium text-sm"
         >
           <Plus size={16} /> Add Banner
         </button>
@@ -116,7 +116,7 @@ export default function AdminContentPage() {
            <div className="w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin" />
         </div>
       ) : banners.length === 0 ? (
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-12 flex flex-col items-center justify-center text-gray-500">
+        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-12 flex flex-col items-center justify-center text-gray-500">
           <ImageIcon size={48} className="mb-4 opacity-20" />
           <p>No banners configured.</p>
           <p className="text-sm">Add a banner to display it on the homepage hero section.</p>
@@ -124,18 +124,18 @@ export default function AdminContentPage() {
       ) : (
         <div className="space-y-4">
           {banners.map((banner, index) => (
-            <div key={banner._id} className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden flex group">
+            <div key={banner._id} className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden flex group">
               {/* Drag Handle */}
-              <div className="w-10 bg-gray-950 flex items-center justify-center border-r border-gray-800 text-gray-600 cursor-move hover:text-white transition-colors">
+              <div className="w-10 bg-gray-50 dark:bg-gray-950 flex items-center justify-center border-r border-gray-200 dark:border-gray-800 text-gray-600 cursor-move hover:text-gray-900 dark:text-white transition-colors">
                  <GripVertical size={16} />
               </div>
               
               {/* Preview */}
-              <div className="w-64 h-32 relative bg-gray-950 border-r border-gray-800 shrink-0">
+              <div className="w-64 h-32 relative bg-gray-50 dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800 shrink-0">
                 <img src={banner.imageUrl} alt="" className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-black" style={{ opacity: banner.overlayDarkness / 100 }} />
                 <div className="absolute inset-0 p-4 flex flex-col justify-center">
-                  <h3 className="text-white font-bold text-sm leading-tight line-clamp-2">{banner.headline}</h3>
+                  <h3 className="text-gray-900 dark:text-white font-bold text-sm leading-tight line-clamp-2">{banner.headline}</h3>
                   <p className="text-gray-300 text-[10px] mt-1 line-clamp-1">{banner.subtext}</p>
                 </div>
               </div>
@@ -147,7 +147,7 @@ export default function AdminContentPage() {
                     {banner.isActive ? 'Active' : 'Draft'}
                   </span>
                   <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onClick={() => handleOpenEdit(banner)} className="p-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors">
+                    <button onClick={() => handleOpenEdit(banner)} className="p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-700 text-gray-900 dark:text-white rounded-lg transition-colors">
                       <Edit2 size={14} />
                     </button>
                     <button onClick={() => handleDelete(banner._id)} className="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg transition-colors">
@@ -178,66 +178,66 @@ export default function AdminContentPage() {
         title={editingBanner ? 'Edit Banner' : 'Create Banner'}
       >
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-4 bg-gray-950 p-6 rounded-xl border border-gray-800">
+          <div className="space-y-4 bg-gray-50 dark:bg-gray-950 p-6 rounded-xl border border-gray-200 dark:border-gray-800">
             <div>
-              <label className="block text-sm font-medium text-gray-400 mb-2">Image URL (Unsplash/Cloudinary)</label>
+              <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Image URL (Unsplash/Cloudinary)</label>
               <input
                 type="url"
                 required
                 value={formData.imageUrl}
                 onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                className="w-full bg-gray-900 border border-gray-800 rounded-lg px-4 py-2 text-white focus:border-primary-500 focus:outline-none"
+                className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg px-4 py-2 text-gray-900 dark:text-white focus:border-primary-500 focus:outline-none"
                 placeholder="https://images.unsplash.com/..."
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-400 mb-2">Headline</label>
+              <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Headline</label>
               <input
                 type="text"
                 required
                 value={formData.headline}
                 onChange={(e) => setFormData({ ...formData, headline: e.target.value })}
-                className="w-full bg-gray-900 border border-gray-800 rounded-lg px-4 py-2 text-white focus:border-primary-500 focus:outline-none"
+                className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg px-4 py-2 text-gray-900 dark:text-white focus:border-primary-500 focus:outline-none"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-400 mb-2">Subtext</label>
+              <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Subtext</label>
               <input
                 type="text"
                 value={formData.subtext}
                 onChange={(e) => setFormData({ ...formData, subtext: e.target.value })}
-                className="w-full bg-gray-900 border border-gray-800 rounded-lg px-4 py-2 text-white focus:border-primary-500 focus:outline-none"
+                className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg px-4 py-2 text-gray-900 dark:text-white focus:border-primary-500 focus:outline-none"
               />
             </div>
             
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">Button Label</label>
+                <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Button Label</label>
                 <input
                   type="text"
                   value={formData.buttonLabel}
                   onChange={(e) => setFormData({ ...formData, buttonLabel: e.target.value })}
-                  className="w-full bg-gray-900 border border-gray-800 rounded-lg px-4 py-2 text-white focus:border-primary-500 focus:outline-none"
+                  className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg px-4 py-2 text-gray-900 dark:text-white focus:border-primary-500 focus:outline-none"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">Button Link</label>
+                <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Button Link</label>
                 <input
                   type="text"
                   value={formData.buttonLink}
                   onChange={(e) => setFormData({ ...formData, buttonLink: e.target.value })}
-                  className="w-full bg-gray-900 border border-gray-800 rounded-lg px-4 py-2 text-white focus:border-primary-500 focus:outline-none"
+                  className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg px-4 py-2 text-gray-900 dark:text-white focus:border-primary-500 focus:outline-none"
                   placeholder="/category/smartphones"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-400 mb-2 flex justify-between">
+              <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2 flex justify-between">
                 <span>Overlay Darkness (0-100)</span>
-                <span className="text-white">{formData.overlayDarkness}%</span>
+                <span className="text-gray-900 dark:text-white">{formData.overlayDarkness}%</span>
               </label>
               <input
                 type="range"
@@ -249,28 +249,28 @@ export default function AdminContentPage() {
               />
             </div>
 
-            <div className="flex items-center gap-3 pt-4 border-t border-gray-800">
+            <div className="flex items-center gap-3 pt-4 border-t border-gray-200 dark:border-gray-800">
                <input
                  type="checkbox"
                  checked={formData.isActive}
                  onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                 className="w-4 h-4 rounded border-gray-700 bg-gray-800 text-primary-500 focus:ring-primary-500 focus:ring-offset-gray-900"
+                 className="w-4 h-4 rounded border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 text-primary-500 focus:ring-primary-500 focus:ring-offset-gray-900"
                />
-               <span className="text-sm font-medium text-white">Active (Display on Homepage)</span>
+               <span className="text-sm font-medium text-gray-900 dark:text-white">Active (Display on Homepage)</span>
             </div>
           </div>
 
           <div className="flex gap-4 pt-4">
             <button
               type="submit"
-              className="flex-1 bg-primary-600 hover:bg-primary-500 text-white py-3 rounded-lg font-medium transition-colors"
+              className="flex-1 bg-primary-600 hover:bg-primary-500 text-gray-900 dark:text-white py-3 rounded-lg font-medium transition-colors"
             >
               Save Banner
             </button>
             <button
               type="button"
               onClick={() => setIsDrawerOpen(false)}
-              className="px-6 py-3 bg-gray-800 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors"
+              className="px-6 py-3 bg-gray-100 dark:bg-gray-800 hover:bg-gray-700 text-gray-900 dark:text-white rounded-lg font-medium transition-colors"
             >
               Cancel
             </button>

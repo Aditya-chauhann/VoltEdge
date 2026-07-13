@@ -37,7 +37,7 @@ export default function CategorySection({ categories }: CategorySectionProps) {
         <div className="mb-8">
           <span className="badge bg-cyan-400/20 text-cyan-400 mb-2 inline-block">🗂️ SHOP BY</span>
           <h2 className="section-heading">Browse Categories</h2>
-          <p className="text-sm text-gray-400 mt-1">Find exactly what you&apos;re looking for</p>
+          <p className="text-sm text-gray-600 dark:text-gray-600 dark:text-gray-400 mt-1">Find exactly what you&apos;re looking for</p>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
@@ -66,11 +66,11 @@ export default function CategorySection({ categories }: CategorySectionProps) {
                       {emoji}
                     </motion.span>
                     <div>
-                      <p className="font-semibold text-white text-sm group-hover:text-primary-400 transition-colors">
+                      <p className="font-semibold text-gray-900 dark:text-gray-900 dark:text-white text-sm group-hover:text-primary-400 transition-colors">
                         {cat.name}
                       </p>
                       {cat.description && (
-                        <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">{cat.description}</p>
+                        <p className="text-xs text-gray-600 dark:text-gray-600 dark:text-gray-400 mt-0.5 line-clamp-1">{cat.description}</p>
                       )}
                     </div>
                   </div>

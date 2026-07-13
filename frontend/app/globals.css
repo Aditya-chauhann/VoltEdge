@@ -50,7 +50,7 @@ h1, h2, h3, h4, h5, h6 {
   font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
   font-weight: 700;
   line-height: 1.2;
-  color: #FFFFFF;
+  color: inherit;
 }
 
 a {
@@ -108,11 +108,7 @@ input, textarea, select {
 
   /* Glass card */
   .glass-card {
-    background: rgba(26, 26, 46, 0.8);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid var(--color-border);
-    border-radius: 1rem;
+    @apply bg-white/80 dark:bg-[#1A1A2E]/80 backdrop-blur-md border border-gray-200 dark:border-white/10 rounded-2xl shadow-sm dark:shadow-none;
   }
 
   /* Primary gradient button */
@@ -131,8 +127,8 @@ input, textarea, select {
 
   /* Ghost button */
   .btn-ghost {
-    @apply text-gray-300 font-medium px-4 py-2 rounded-lg
-           transition-all duration-200 hover:text-white hover:bg-white/10
+    @apply text-gray-600 dark:text-gray-300 font-medium px-4 py-2 rounded-lg
+           transition-all duration-200 hover:text-gray-900 hover:bg-gray-100 dark:hover:text-white dark:hover:bg-white/10
            active:scale-95;
   }
 
@@ -144,8 +140,8 @@ input, textarea, select {
 
   /* Input field */
   .input-field {
-    @apply w-full bg-base-50 border border-primary-400/20 rounded-xl px-4 py-3
-           text-white placeholder-gray-500 focus:outline-none focus:border-primary-400
+    @apply w-full bg-white dark:bg-base-50 border border-gray-300 dark:border-primary-400/20 rounded-xl px-4 py-3
+           text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-primary-400
            focus:ring-1 focus:ring-primary-400/50 transition-all duration-200;
   }
 
@@ -156,12 +152,12 @@ input, textarea, select {
 
   /* Section heading */
   .section-heading {
-    @apply text-2xl md:text-3xl font-display font-bold text-white;
+    @apply text-2xl md:text-3xl font-display font-bold text-gray-900 dark:text-white;
   }
 
   /* Shimmer loading effect */
   .shimmer {
-    background: linear-gradient(90deg, #1A1A2E 25%, #252747 50%, #1A1A2E 75%);
+    @apply bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 dark:from-[#1A1A2E] dark:via-[#252747] dark:to-[#1A1A2E];
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;
   }
@@ -174,6 +170,12 @@ input, textarea, select {
 /* ─── Utilities ───────────────────────────────────────────────────────────────── */
 @layer utilities {
   .text-gradient {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-cyan-500;
+}
+.dark .text-gradient {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-primary-400 to-cyan-400;
+}
+.old-text-gradient {
     background: var(--gradient-primary);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;

@@ -101,9 +101,9 @@ function ProductsContent() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="font-display font-bold text-3xl text-white">{pageTitle}</h1>
+          <h1 className="font-display font-bold text-3xl text-gray-900 dark:text-white">{pageTitle}</h1>
           {pagination && (
-            <p className="text-sm text-gray-400 mt-1">{pagination.total.toLocaleString()} products</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{pagination.total.toLocaleString()} products</p>
           )}
         </div>
 
@@ -138,7 +138,7 @@ function ProductsContent() {
         `}>
           <div className="glass-card p-5 sticky top-20">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-white">Filters</h3>
+              <h3 className="font-semibold text-gray-900 dark:text-white">Filters</h3>
               <button onClick={resetFilters} className="text-xs text-primary-400 hover:underline">
                 Reset all
               </button>
@@ -146,7 +146,7 @@ function ProductsContent() {
 
             {/* Category filter */}
             <div className="mb-5">
-              <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2 block">
+              <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-2 block">
                 Category
               </label>
               <select
@@ -163,7 +163,7 @@ function ProductsContent() {
 
             {/* Price range */}
             <div className="mb-5">
-              <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2 block">
+              <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-2 block">
                 Price Range (₹)
               </label>
               <div className="flex items-center gap-2">
@@ -219,8 +219,8 @@ function ProductsContent() {
           {!isLoading && products.length === 0 && (
             <div className="text-center py-20">
               <p className="text-4xl mb-4">🔍</p>
-              <p className="text-xl font-display font-bold text-white mb-2">No products found</p>
-              <p className="text-gray-400">Try adjusting your filters</p>
+              <p className="text-xl font-display font-bold text-gray-900 dark:text-white mb-2">No products found</p>
+              <p className="text-gray-600 dark:text-gray-400">Try adjusting your filters</p>
               <button onClick={resetFilters} className="btn-primary mt-4">Reset Filters</button>
             </div>
           )}
@@ -235,7 +235,7 @@ function ProductsContent() {
               >
                 ← Prev
               </button>
-              <span className="px-4 py-2 text-sm text-gray-400">
+              <span className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400">
                 Page {pagination.page} of {pagination.totalPages}
               </span>
               <button

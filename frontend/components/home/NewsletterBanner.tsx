@@ -27,13 +27,13 @@ export default function NewsletterBanner() {
 
           {/* Icon */}
           <div className="w-14 h-14 bg-gradient-primary rounded-2xl flex items-center justify-center mx-auto mb-5">
-            <Mail size={26} className="text-white" />
+            <Mail size={26} className="text-gray-900 dark:text-white" />
           </div>
 
-          <h2 className="font-display font-bold text-3xl md:text-4xl text-white mb-3">
+          <h2 className="font-display font-bold text-3xl md:text-4xl text-gray-900 dark:text-white mb-3">
             Stay in the Loop
           </h2>
-          <p className="text-gray-400 mb-8 max-w-md mx-auto">
+          <p className="text-gray-600 dark:text-gray-400 mb-8 max-w-md mx-auto">
             Get exclusive deals, new arrivals, and tech tips delivered straight to your inbox.
             Join 50,000+ gadget lovers!
           </p>

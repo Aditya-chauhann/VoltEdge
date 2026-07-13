@@ -50,16 +50,16 @@ export function AdminDrawer({ isOpen, onClose, title, children }: AdminDrawerPro
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: '100%', opacity: 0 }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-y-0 right-0 w-full md:w-[600px] lg:w-[800px] bg-gray-900 border-l border-gray-800 shadow-2xl z-[101] flex flex-col"
+            className="fixed inset-y-0 right-0 w-full md:w-[600px] lg:w-[800px] bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 shadow-2xl z-[101] flex flex-col"
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-800 shrink-0">
-              <h2 className="text-xl font-display font-semibold text-white truncate">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800 shrink-0">
+              <h2 className="text-xl font-display font-semibold text-gray-900 dark:text-white truncate">
                 {title}
               </h2>
               <button
                 onClick={onClose}
-                className="p-2 rounded-xl text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
+                className="p-2 rounded-xl text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:text-white hover:bg-gray-100 dark:bg-gray-800 transition-colors"
               >
                 <X size={20} />
               </button>

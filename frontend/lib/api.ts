@@ -136,7 +136,6 @@ export const ordersApi = {
   list:           (params?: AxiosRequestConfig['params']) => apiClient.get('/orders', { params }),
   get:            (id: string)   => apiClient.get(`/orders/${id}`),
   cancel:         (id: string, reason?: string) => apiClient.post(`/orders/${id}/cancel`, { reason }),
-  requestReturn:  (id: string, reason?: string) => apiClient.post(`/orders/${id}/return`, { reason }),
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -202,6 +201,18 @@ export const adminApi = {
   // Finance
   financeConfig:    () => apiClient.get('/admin/finance'),
   updateFinance:    (data: object) => apiClient.put('/admin/finance', data),
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Issues API
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const issuesApi = {
+  reportIssue: (orderId: string, data: { subject: string; message: string }) =>
+    apiClient.post(`/issues/orders/${orderId}`, data),
+  getIssues: (params?: object) => apiClient.get('/issues', { params }),
+  updateIssue: (id: string, data: { status?: string; adminNotes?: string }) => 
+    apiClient.patch(`/issues/${id}`, data),
 };
 
 export default apiClient;

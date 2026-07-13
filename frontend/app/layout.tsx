@@ -7,6 +7,7 @@ import Footer from '@/components/layout/Footer';
 import CartDrawer from '@/components/layout/CartDrawer';
 import AuthModal from '@/components/auth/AuthModal';
 import StoreProvider from '@/components/layout/StoreProvider';
+import { ThemeProvider } from '@/components/providers/ThemeProvider';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
@@ -44,8 +45,9 @@ export default function RootLayout({
         {/* Razorpay checkout script */}
         <script src="https://checkout.razorpay.com/v1/checkout.js" async />
       </head>
-      <body className="bg-base text-white antialiased">
-        <StoreProvider>
+      <body className="bg-white dark:bg-base text-gray-900 dark:text-white antialiased">
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <StoreProvider>
           <Navbar />
           <main className="min-h-screen pt-16">
             {children}
@@ -53,7 +55,8 @@ export default function RootLayout({
           <Footer />
           <CartDrawer />
           <AuthModal />
-        </StoreProvider>
+          </StoreProvider>
+        </ThemeProvider>
 
         <Toaster
           position="top-right"

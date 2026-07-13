@@ -35,10 +35,10 @@ export default function AdminDashboard() {
       <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-32 bg-gray-900 rounded-2xl animate-pulse" />
+            <div key={i} className="h-32 bg-white dark:bg-gray-900 rounded-2xl animate-pulse" />
           ))}
         </div>
-        <div className="h-[400px] bg-gray-900 rounded-2xl animate-pulse" />
+        <div className="h-[400px] bg-white dark:bg-gray-900 rounded-2xl animate-pulse" />
       </div>
     );
   }
@@ -58,8 +58,29 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-8 pb-12">
       {/* ─── Pending Actions (Bright Alert Cards) ─── */}
-      {(pendingActions.ordersToConfirm > 0 || pendingActions.returnsRequested > 0) && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {(pendingActions.ordersToConfirm > 0 || pendingActions.returnsRequested > 0 || pendingActions.refundsPending > 0) && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {pendingActions.refundsPending > 0 && (
+            <Link href="/admin/orders?status=cancelled&paymentStatus=paid">
+              <motion.div
+                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                className="bg-orange-500/10 border border-orange-500/20 rounded-xl p-4 flex items-center justify-between hover:bg-orange-500/20 transition-colors cursor-pointer group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                    <DollarSign size={20} className="text-orange-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-gray-900 dark:text-white font-medium">Refunds Pending</h3>
+                    <p className="text-sm text-orange-200">Cancelled prepaid orders</p>
+                  </div>
+                </div>
+                <div className="text-2xl font-bold text-orange-400 group-hover:scale-110 transition-transform">
+                  {pendingActions.refundsPending}
+                </div>
+              </motion.div>
+            </Link>
+          )}
           {pendingActions.ordersToConfirm > 0 && (
             <Link href="/admin/orders?status=placed">
               <motion.div
@@ -71,7 +92,7 @@ export default function AdminDashboard() {
                     <Clock size={20} className="text-primary-400" />
                   </div>
                   <div>
-                    <h3 className="text-white font-medium">Orders to Confirm</h3>
+                    <h3 className="text-gray-900 dark:text-white font-medium">Orders to Confirm</h3>
                     <p className="text-sm text-primary-200">Awaiting your approval</p>
                   </div>
                 </div>
@@ -93,7 +114,7 @@ export default function AdminDashboard() {
                     <AlertCircle size={20} className="text-red-400" />
                   </div>
                   <div>
-                    <h3 className="text-white font-medium">Returns Requested</h3>
+                    <h3 className="text-gray-900 dark:text-white font-medium">Returns Requested</h3>
                     <p className="text-sm text-red-200">Require manual review</p>
                   </div>
                 </div>
@@ -137,8 +158,8 @@ export default function AdminDashboard() {
       {/* ─── Charts Row ─── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Order Funnel Chart */}
-        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 shadow-sm">
-          <h3 className="text-lg font-medium text-white mb-6">Order Fulfillment Funnel</h3>
+        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 shadow-sm">
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-6">Order Fulfillment Funnel</h3>
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={funnelData} layout="vertical" margin={{ left: 20, right: 20 }}>
@@ -156,9 +177,9 @@ export default function AdminDashboard() {
         </div>
 
         {/* Recent Orders List */}
-        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 shadow-sm flex flex-col">
+        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 shadow-sm flex flex-col">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-medium text-white">Recent Orders</h3>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white">Recent Orders</h3>
             <Link href="/admin/orders" className="text-sm text-primary-400 hover:underline">
               View all
             </Link>
@@ -166,25 +187,25 @@ export default function AdminDashboard() {
           <div className="flex-1 overflow-y-auto custom-scrollbar">
             <div className="space-y-4">
               {recentOrders.map((order: any) => (
-                <div key={order._id} className="flex items-center justify-between p-4 rounded-xl bg-gray-800/50 border border-gray-700/50">
+                <div key={order._id} className="flex items-center justify-between p-4 rounded-xl bg-gray-100 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-700/50">
                   <div>
-                    <p className="text-white font-medium">{order.orderNumber}</p>
-                    <p className="text-sm text-gray-400">{order.user?.name || 'Guest'}</p>
+                    <p className="text-gray-900 dark:text-white font-medium">{order.orderNumber}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{order.user?.name || 'Guest'}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-white font-medium">₹{order.total}</p>
+                    <p className="text-gray-900 dark:text-white font-medium">₹{order.total}</p>
                     <span className={`inline-flex px-2 py-1 text-[10px] font-bold uppercase rounded-md tracking-wider mt-1
                       ${order.orderStatus === 'placed' ? 'bg-amber-500/10 text-amber-500' :
                         order.orderStatus === 'confirmed' ? 'bg-blue-500/10 text-blue-500' :
                         order.orderStatus === 'delivered' ? 'bg-emerald-500/10 text-emerald-500' :
-                        'bg-gray-500/10 text-gray-400'}`}>
+                        'bg-gray-500/10 text-gray-600 dark:text-gray-400'}`}>
                       {order.orderStatus}
                     </span>
                   </div>
                 </div>
               ))}
               {recentOrders.length === 0 && (
-                <p className="text-gray-400 text-center py-8">No recent orders found.</p>
+                <p className="text-gray-600 dark:text-gray-400 text-center py-8">No recent orders found.</p>
               )}
             </div>
           </div>
@@ -196,15 +217,15 @@ export default function AdminDashboard() {
 
 function StatCard({ title, value, subvalue, icon }: { title: string; value: string; subvalue: string; icon: React.ReactNode }) {
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 shadow-sm">
+    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 shadow-sm">
       <div className="flex justify-between items-start mb-4">
-        <div className="w-10 h-10 rounded-xl bg-gray-800 flex items-center justify-center">
+        <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
           {icon}
         </div>
       </div>
       <div>
-        <h3 className="text-gray-400 text-sm font-medium">{title}</h3>
-        <p className="text-white text-3xl font-display font-semibold mt-1 mb-1">{value}</p>
+        <h3 className="text-gray-600 dark:text-gray-400 text-sm font-medium">{title}</h3>
+        <p className="text-gray-900 dark:text-white text-3xl font-display font-semibold mt-1 mb-1">{value}</p>
         <p className="text-gray-500 text-xs">{subvalue}</p>
       </div>
     </div>

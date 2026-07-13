@@ -149,7 +149,7 @@ export default function HeroSection({ banners }: { banners?: any[] }) {
       }))
     : DEFAULT_SLIDES;
 
-  const slide = slides[current];
+  const slide = slides[current] || DEFAULT_SLIDES[0];
 
   const paginate = useCallback((newDirection: number, newIndex?: number) => {
     if (isAnimating) return;
@@ -179,7 +179,7 @@ export default function HeroSection({ banners }: { banners?: any[] }) {
 
   return (
     <section 
-      className="relative min-h-[85vh] flex flex-col overflow-hidden bg-gradient-hero"
+      className="relative min-h-[85vh] flex flex-col overflow-hidden bg-gradient-to-br from-indigo-100 via-white to-cyan-100 dark:bg-gradient-hero"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
@@ -241,7 +241,7 @@ export default function HeroSection({ banners }: { banners?: any[] }) {
 
                   {/* Headline */}
                   <motion.div variants={textItemVariants}>
-                    <h1 className="font-display font-black text-5xl sm:text-6xl lg:text-7xl leading-none text-white">
+                    <h1 className="font-display font-black text-5xl sm:text-6xl lg:text-7xl leading-none text-gray-900 dark:text-white">
                       {slide.headline}
                     </h1>
                     <h1 className="font-display font-black text-5xl sm:text-6xl lg:text-7xl leading-none text-gradient mt-1">
@@ -250,7 +250,7 @@ export default function HeroSection({ banners }: { banners?: any[] }) {
                   </motion.div>
 
                   {/* Description */}
-                  <motion.p variants={textItemVariants} className="text-lg text-gray-300 max-w-lg leading-relaxed">
+                  <motion.p variants={textItemVariants} className="text-lg text-gray-600 dark:text-gray-300 max-w-lg leading-relaxed">
                     {slide.description}
                   </motion.p>
 
@@ -268,9 +268,9 @@ export default function HeroSection({ banners }: { banners?: any[] }) {
                   <motion.div variants={textItemVariants} className="flex flex-wrap gap-3 pt-2">
                     {features.map(({ icon: Icon, label }) => (
                       <div key={label} className="flex items-center gap-1.5 px-3 py-1.5
-                                                 bg-white/5 border border-white/10 rounded-full">
-                        <Icon size={12} className="text-primary-400" />
-                        <span className="text-xs text-gray-300 font-medium">{label}</span>
+                                                 bg-white/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-full">
+                        <Icon size={12} className="text-primary-600 dark:text-primary-400" />
+                        <span className="text-xs text-gray-600 dark:text-gray-300 font-medium">{label}</span>
                       </div>
                     ))}
                   </motion.div>
@@ -317,7 +317,7 @@ export default function HeroSection({ banners }: { banners?: any[] }) {
                       transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
                       className="absolute -top-4 -right-2 glass-card px-3 py-2 shadow-glow-primary z-20"
                     >
-                      <p className="text-xs text-gray-400">Starting from</p>
+                      <p className="text-xs text-gray-600 dark:text-gray-400">Starting from</p>
                       <p className="font-display font-bold text-primary-400">₹999</p>
                     </motion.div>
 
@@ -326,7 +326,7 @@ export default function HeroSection({ banners }: { banners?: any[] }) {
                       transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
                       className="absolute -bottom-4 -left-2 glass-card px-3 py-2 shadow-glow-cyan z-20"
                     >
-                      <p className="text-xs text-gray-400">Free Shipping</p>
+                      <p className="text-xs text-gray-600 dark:text-gray-400">Free Shipping</p>
                       <p className="font-display font-bold text-cyan-400 text-sm">All Orders ✓</p>
                     </motion.div>
                   </motion.div>
@@ -345,7 +345,7 @@ export default function HeroSection({ banners }: { banners?: any[] }) {
           onClick={() => paginate(-1)}
           disabled={isAnimating}
           className="w-9 h-9 rounded-full glass-card flex items-center justify-center
-                     text-gray-400 hover:text-white hover:border-primary-400/40 transition-all disabled:opacity-50"
+                     text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:text-white hover:border-primary-400/40 transition-all disabled:opacity-50"
         >
           <ChevronLeft size={18} />
         </button>
@@ -371,7 +371,7 @@ export default function HeroSection({ banners }: { banners?: any[] }) {
           onClick={() => paginate(1)}
           disabled={isAnimating}
           className="w-9 h-9 rounded-full glass-card flex items-center justify-center
-                     text-gray-400 hover:text-white hover:border-primary-400/40 transition-all disabled:opacity-50"
+                     text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:text-white hover:border-primary-400/40 transition-all disabled:opacity-50"
         >
           <ChevronRight size={18} />
         </button>

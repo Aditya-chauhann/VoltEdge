@@ -63,7 +63,7 @@ export default function OrderConfirmedPage() {
         transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.1 }}
         className="w-24 h-24 bg-gradient-primary rounded-full flex items-center justify-center mx-auto mb-6 shadow-glow-primary"
       >
-        <CheckCircle size={48} className="text-white" />
+        <CheckCircle size={48} className="text-gray-900 dark:text-white" />
       </motion.div>
 
       <motion.div
@@ -71,8 +71,8 @@ export default function OrderConfirmedPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
       >
-        <h1 className="font-display font-black text-4xl text-white mb-2">Order Placed!</h1>
-        <p className="text-gray-400 mb-8">
+        <h1 className="font-display font-black text-4xl text-gray-900 dark:text-white mb-2">Order Placed!</h1>
+        <p className="text-gray-600 dark:text-gray-400 mb-8">
           Thank you for shopping with VoltEdge. Your order has been confirmed!
         </p>
 
@@ -85,7 +85,7 @@ export default function OrderConfirmedPage() {
               </div>
               <div className="text-right">
                 <p className="text-xs text-gray-500">Total Paid</p>
-                <p className="font-display font-bold text-white text-xl">{formatPrice(order.total)}</p>
+                <p className="font-display font-bold text-gray-900 dark:text-white text-xl">{formatPrice(order.total)}</p>
               </div>
             </div>
 
@@ -94,14 +94,14 @@ export default function OrderConfirmedPage() {
               {order.items.slice(0, 3).map((item, i) => (
                 <div key={i} className="flex gap-3 items-center">
                   <img src={item.image} alt={item.title}
-                    className="w-10 h-10 rounded-lg object-cover border border-gray-700 flex-shrink-0"
+                    className="w-10 h-10 rounded-lg object-cover border border-gray-300 dark:border-gray-700 flex-shrink-0"
                     onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                   />
                   <div className="flex-1 min-w-0">
                     <p className="text-xs text-gray-300 truncate">{item.title}</p>
                     <p className="text-xs text-gray-500">×{item.qty}</p>
                   </div>
-                  <p className="text-xs font-medium text-white">{formatPrice(item.total)}</p>
+                  <p className="text-xs font-medium text-gray-900 dark:text-white">{formatPrice(item.total)}</p>
                 </div>
               ))}
               {order.items.length > 3 && (

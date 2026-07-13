@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import {
   createRazorpayOrderHandler, verifyRazorpayPayment,
-  placeCODOrder, listOrders, getOrder, cancelOrder, requestReturn,
+  placeCODOrder, listOrders, getOrder, cancelOrder,
 } from '../controllers/order.controller';
 import { protect } from '../middleware/auth.middleware';
 
@@ -16,6 +16,5 @@ router.post('/cod',               placeCODOrder);
 router.get('/',                   listOrders);
 router.get('/:id',                getOrder);
 router.post('/:id/cancel',        cancelOrder);
-router.post('/:id/return',        requestReturn);
 
 export default router;

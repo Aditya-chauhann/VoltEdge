@@ -56,15 +56,15 @@ function ProductSection({
   badge, title, subtitle, href, products, isLoading, dark,
 }: SectionProps & { badge: string; title: string; subtitle: string; href: string; dark?: boolean }) {
   return (
-    <section className={`py-16 ${dark ? 'bg-base-50/30' : ''}`}>
+    <section className={`py-16 ${dark ? 'bg-gradient-to-b from-white to-cyan-50/30 dark:from-transparent dark:to-transparent dark:bg-base-50/30' : ''}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-end justify-between mb-8">
           <div>
             <span className="badge bg-primary-400/20 text-primary-400 mb-2 inline-block">{badge}</span>
             <h2 className="section-heading">{title}</h2>
-            <p className="text-sm text-gray-400 mt-1">{subtitle}</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{subtitle}</p>
           </div>
-          <Link href={href} className="hidden sm:flex items-center gap-2 text-sm text-primary-400 hover:text-white transition-colors">
+          <Link href={href} className="hidden sm:flex items-center gap-2 text-sm text-primary-400 hover:text-gray-900 dark:text-white transition-colors">
             View all <ArrowRight size={14} />
           </Link>
         </div>

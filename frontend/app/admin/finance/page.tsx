@@ -11,6 +11,13 @@ export default function AdminFinancePage() {
     taxRatePercent: 18,
     paymentGatewayFeePercent: 2,
     fixedGatewayFeeInr: 0,
+    minimumOrderAmount: 50000,
+    currencyRates: {
+      USD: 0.012,
+      EUR: 0.011,
+      GBP: 0.009,
+      AED: 0.044,
+    }
   });
   
   const [loading, setLoading] = useState(true);
@@ -47,7 +54,7 @@ export default function AdminFinancePage() {
   return (
     <div className="space-y-6 max-w-4xl">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-medium text-white">Finance & Fees Configuration</h2>
+        <h2 className="text-xl font-medium text-gray-900 dark:text-white">Finance & Fees Configuration</h2>
       </div>
 
       {loading ? (
@@ -57,8 +64,8 @@ export default function AdminFinancePage() {
       ) : (
         <form onSubmit={handleSave} className="space-y-8">
           
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-            <h3 className="text-lg font-medium text-white flex items-center gap-2 mb-6">
+          <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white flex items-center gap-2 mb-6">
                <Calculator className="text-primary-500" />
                Global Modifiers
             </h3>
@@ -66,7 +73,7 @@ export default function AdminFinancePage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="space-y-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-2">Platform Margin</label>
+                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Platform Margin</label>
                   <div className="relative">
                     <input
                       type="number"
@@ -74,7 +81,7 @@ export default function AdminFinancePage() {
                       required
                       value={config.platformMarginPercent}
                       onChange={(e) => setConfig({ ...config, platformMarginPercent: parseFloat(e.target.value) })}
-                      className="w-full bg-gray-950 border border-gray-800 rounded-lg pl-10 pr-4 py-3 text-white focus:border-primary-500 focus:outline-none"
+                      className="w-full bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-lg pl-10 pr-4 py-3 text-gray-900 dark:text-white focus:border-primary-500 focus:outline-none"
                     />
                     <Percent size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
                   </div>
@@ -82,7 +89,7 @@ export default function AdminFinancePage() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-2">Tax Rate (GST)</label>
+                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Tax Rate (GST)</label>
                   <div className="relative">
                     <input
                       type="number"
@@ -90,7 +97,7 @@ export default function AdminFinancePage() {
                       required
                       value={config.taxRatePercent}
                       onChange={(e) => setConfig({ ...config, taxRatePercent: parseFloat(e.target.value) })}
-                      className="w-full bg-gray-950 border border-gray-800 rounded-lg pl-10 pr-4 py-3 text-white focus:border-primary-500 focus:outline-none"
+                      className="w-full bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-lg pl-10 pr-4 py-3 text-gray-900 dark:text-white focus:border-primary-500 focus:outline-none"
                     />
                     <Percent size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
                   </div>
@@ -100,7 +107,7 @@ export default function AdminFinancePage() {
 
               <div className="space-y-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-2">Payment Gateway Fee (Percentage)</label>
+                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Payment Gateway Fee (Percentage)</label>
                   <div className="relative">
                     <input
                       type="number"
@@ -108,7 +115,7 @@ export default function AdminFinancePage() {
                       required
                       value={config.paymentGatewayFeePercent}
                       onChange={(e) => setConfig({ ...config, paymentGatewayFeePercent: parseFloat(e.target.value) })}
-                      className="w-full bg-gray-950 border border-gray-800 rounded-lg pl-10 pr-4 py-3 text-white focus:border-primary-500 focus:outline-none"
+                      className="w-full bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-lg pl-10 pr-4 py-3 text-gray-900 dark:text-white focus:border-primary-500 focus:outline-none"
                     />
                     <Percent size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
                   </div>
@@ -116,7 +123,7 @@ export default function AdminFinancePage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-2">Payment Gateway Fee (Fixed)</label>
+                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Payment Gateway Fee (Fixed)</label>
                   <div className="relative">
                     <input
                       type="number"
@@ -124,7 +131,7 @@ export default function AdminFinancePage() {
                       required
                       value={config.fixedGatewayFeeInr}
                       onChange={(e) => setConfig({ ...config, fixedGatewayFeeInr: parseFloat(e.target.value) })}
-                      className="w-full bg-gray-950 border border-gray-800 rounded-lg pl-10 pr-4 py-3 text-white focus:border-primary-500 focus:outline-none"
+                      className="w-full bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-lg pl-10 pr-4 py-3 text-gray-900 dark:text-white focus:border-primary-500 focus:outline-none"
                     />
                     <DollarSign size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
                   </div>
@@ -134,9 +141,86 @@ export default function AdminFinancePage() {
             </div>
           </div>
           
+          <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white flex items-center gap-2 mb-6">
+               <Settings className="text-primary-500" />
+               Order & Currency Settings
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Minimum Order Amount (INR)</label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      required
+                      value={config.minimumOrderAmount}
+                      onChange={(e) => setConfig({ ...config, minimumOrderAmount: parseInt(e.target.value) || 0 })}
+                      className="w-full bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-lg pl-10 pr-4 py-3 text-gray-900 dark:text-white focus:border-primary-500 focus:outline-none"
+                    />
+                    <DollarSign size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">The minimum cart value required to checkout (Base currency is INR).</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">USD Exchange Rate (1 INR = X USD)</label>
+                  <input
+                    type="number"
+                    step="0.0001"
+                    required
+                    value={config.currencyRates.USD}
+                    onChange={(e) => setConfig({ ...config, currencyRates: { ...config.currencyRates, USD: parseFloat(e.target.value) || 0 } })}
+                    className="w-full bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-lg px-4 py-3 text-gray-900 dark:text-white focus:border-primary-500 focus:outline-none"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">EUR Exchange Rate (1 INR = X EUR)</label>
+                  <input
+                    type="number"
+                    step="0.0001"
+                    required
+                    value={config.currencyRates.EUR}
+                    onChange={(e) => setConfig({ ...config, currencyRates: { ...config.currencyRates, EUR: parseFloat(e.target.value) || 0 } })}
+                    className="w-full bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-lg px-4 py-3 text-gray-900 dark:text-white focus:border-primary-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+              
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">GBP Exchange Rate (1 INR = X GBP)</label>
+                  <input
+                    type="number"
+                    step="0.0001"
+                    required
+                    value={config.currencyRates.GBP}
+                    onChange={(e) => setConfig({ ...config, currencyRates: { ...config.currencyRates, GBP: parseFloat(e.target.value) || 0 } })}
+                    className="w-full bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-lg px-4 py-3 text-gray-900 dark:text-white focus:border-primary-500 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">AED Exchange Rate (1 INR = X AED)</label>
+                  <input
+                    type="number"
+                    step="0.0001"
+                    required
+                    value={config.currencyRates.AED}
+                    onChange={(e) => setConfig({ ...config, currencyRates: { ...config.currencyRates, AED: parseFloat(e.target.value) || 0 } })}
+                    className="w-full bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-lg px-4 py-3 text-gray-900 dark:text-white focus:border-primary-500 focus:outline-none"
+                  />
+                  <p className="text-xs text-gray-500 mt-2">These are auto-updated daily from the API, but you can override them here.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
           <div className="bg-primary-900/10 border border-primary-500/20 rounded-xl p-6">
             <h4 className="text-primary-400 font-medium mb-2">How Pricing is Calculated</h4>
-            <div className="text-sm text-gray-400 space-y-2 font-mono bg-gray-950 p-4 rounded-lg border border-gray-900">
+            <div className="text-sm text-gray-600 dark:text-gray-400 space-y-2 font-mono bg-gray-50 dark:bg-gray-950 p-4 rounded-lg border border-gray-900">
                <p>Base Cost = CJ Product Cost + CJ Shipping</p>
                <p>Retail Price = Base Cost * (1 + Platform Margin)</p>
                <p>Final Price = Retail Price * (1 + Tax Rate)</p>
@@ -148,7 +232,7 @@ export default function AdminFinancePage() {
             <button
               type="submit"
               disabled={saving}
-              className="bg-primary-600 hover:bg-primary-500 text-white px-8 py-3 rounded-lg font-medium transition-colors disabled:opacity-50"
+              className="bg-primary-600 hover:bg-primary-500 text-gray-900 dark:text-white px-8 py-3 rounded-lg font-medium transition-colors disabled:opacity-50"
             >
               {saving ? 'Saving Changes...' : 'Save Configuration'}
             </button>

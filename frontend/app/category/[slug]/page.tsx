@@ -41,11 +41,11 @@ export default function CategoryPage() {
       {/* Header */}
       <div className="flex items-end justify-between mb-8">
         <div>
-          <h1 className="font-display font-bold text-3xl text-white">
+          <h1 className="font-display font-bold text-3xl text-gray-900 dark:text-white">
             {category?.name ?? slug.replace(/-/g, ' ')}
           </h1>
           {category?.description && (
-            <p className="text-sm text-gray-400 mt-1">{category.description}</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{category.description}</p>
           )}
           {pagination && (
             <p className="text-xs text-gray-500 mt-1">{pagination.total.toLocaleString()} products</p>
@@ -80,8 +80,8 @@ export default function CategoryPage() {
       {!isLoading && products.length === 0 && (
         <div className="text-center py-20">
           <p className="text-4xl mb-4">📦</p>
-          <p className="font-display text-white text-xl">No products in this category yet</p>
-          <p className="text-gray-400 mt-2">Check back after the next sync!</p>
+          <p className="font-display text-gray-900 dark:text-white text-xl">No products in this category yet</p>
+          <p className="text-gray-600 dark:text-gray-400 mt-2">Check back after the next sync!</p>
         </div>
       )}
 
@@ -89,7 +89,7 @@ export default function CategoryPage() {
         <div className="flex items-center justify-center gap-2 mt-10">
           <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={!pagination.hasPrev}
             className="btn-secondary py-2 px-4 text-sm disabled:opacity-40">← Prev</button>
-          <span className="px-4 py-2 text-sm text-gray-400">Page {pagination.page} of {pagination.totalPages}</span>
+          <span className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400">Page {pagination.page} of {pagination.totalPages}</span>
           <button onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))} disabled={!pagination.hasNext}
             className="btn-secondary py-2 px-4 text-sm disabled:opacity-40">Next →</button>
         </div>

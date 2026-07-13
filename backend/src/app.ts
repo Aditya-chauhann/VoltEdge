@@ -31,6 +31,8 @@ import reviewRoutes   from './routes/review.routes';
 import couponRoutes   from './routes/coupon.routes';
 import adminRoutes    from './routes/admin.routes';
 import webhookRoutes  from './routes/webhook.routes';
+import issueRoutes    from './routes/issue.routes';
+import configRoutes   from './routes/config.routes';
 
 // Initialize cron jobs
 import './cron';
@@ -103,6 +105,8 @@ app.use('/api/reviews',          reviewRoutes);
 app.use('/api/coupons',          couponRoutes);
 app.use('/api/admin',            adminRoutes);
 app.use('/api/webhooks/razorpay', webhookRoutes);
+app.use('/api/issues',           issueRoutes);
+app.use('/api/config',           configRoutes);
 
 // ── 404 & error handling ──────────────────────────────────────────────────────
 app.use(notFound);

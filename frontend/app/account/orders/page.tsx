@@ -11,6 +11,7 @@ import { Order } from '@/types';
 import { formatPrice, formatDate, ORDER_STATUS_LABELS } from '@/lib/utils';
 import { PageLoader } from '@/components/ui/LoadingSpinner';
 import { SkeletonRow } from '@/components/ui/SkeletonCard';
+import { Pagination } from '@/components/ui/Pagination';
 
 const STATUS_COLORS: Record<string, string> = {
   placed:           'bg-blue-400/20 text-blue-400',
@@ -21,22 +22,26 @@ const STATUS_COLORS: Record<string, string> = {
   delivered:        'bg-success/20 text-success',
   cancelled:        'bg-danger/20 text-danger',
   return_requested: 'bg-warning/20 text-warning',
-  returned:         'bg-gray-400/20 text-gray-400',
+  returned:         'bg-gray-400/20 text-gray-600 dark:text-gray-400',
 };
 
 export default function OrdersPage() {
   const router = useRouter();
-  const { isLoggedIn } = useAuthStore();
+  const { isLoggedIn, _hasHydrated } = useAuthStore();
   const [orders,    setOrders]    = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
+    if (!_hasHydrated) return;
     if (!isLoggedIn) { router.push('/'); return; }
     async function load() {
       setIsLoading(true);
       try {
-        const res = await ordersApi.list({ limit: '20' });
+        const res = await ordersApi.list({ page, limit: 10 });
         setOrders(res.data.data.orders);
+        setTotalPages(res.data.data.pagination?.totalPages || 1);
       } catch (err) {
         console.error(getApiError(err));
       } finally {
@@ -44,24 +49,24 @@ export default function OrdersPage() {
       }
     }
     load();
-  }, [isLoggedIn, router]);
+  }, [isLoggedIn, router, _hasHydrated, page]);
 
   if (isLoading) return (
     <div className="max-w-3xl mx-auto px-4 py-8">
-      <div className="h-8 bg-base-50 shimmer rounded w-40 mb-6" />
+      <div className="h-8 bg-white dark:bg-base-50 shimmer rounded w-40 mb-6" />
       <div className="space-y-3">{Array.from({ length: 4 }).map((_, i) => <SkeletonRow key={i} />)}</div>
     </div>
   );
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
-      <h1 className="font-display font-bold text-2xl text-white mb-6">My Orders</h1>
+      <h1 className="font-display font-bold text-2xl text-gray-900 dark:text-white mb-6">My Orders</h1>
 
       {orders.length === 0 ? (
         <div className="glass-card p-12 text-center">
           <Package size={48} className="text-gray-600 mx-auto mb-4" />
-          <p className="font-display font-bold text-white text-xl mb-2">No orders yet</p>
-          <p className="text-gray-400 mb-6">Start shopping to place your first order</p>
+          <p className="font-display font-bold text-gray-900 dark:text-white text-xl mb-2">No orders yet</p>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">Start shopping to place your first order</p>
           <Link href="/products" className="btn-primary">Shop Now</Link>
         </div>
       ) : (
@@ -78,12 +83,12 @@ export default function OrdersPage() {
                   <div className="flex items-start justify-between mb-3">
                     <div>
                       <p className="text-xs text-gray-500 mb-1">Order #{order.orderNumber}</p>
-                      <span className={`badge ${STATUS_COLORS[order.orderStatus] ?? 'bg-gray-400/20 text-gray-400'}`}>
+                      <span className={`badge ${STATUS_COLORS[order.orderStatus] ?? 'bg-gray-400/20 text-gray-600 dark:text-gray-400'}`}>
                         {ORDER_STATUS_LABELS[order.orderStatus] ?? order.orderStatus}
                       </span>
                     </div>
                     <div className="text-right">
-                      <p className="font-display font-bold text-white">{formatPrice(order.total)}</p>
+                      <p className="font-display font-bold text-gray-900 dark:text-white">{formatPrice(order.total)}</p>
                       <p className="text-xs text-gray-500 mt-0.5">{formatDate(order.createdAt)}</p>
                     </div>
                   </div>
@@ -95,14 +100,14 @@ export default function OrdersPage() {
                         key={i}
                         src={item.image}
                         alt={item.title}
-                        className="w-10 h-10 rounded-lg object-cover border border-gray-700"
+                        className="w-10 h-10 rounded-lg object-cover border border-gray-300 dark:border-gray-700"
                         onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                       />
                     ))}
                     {order.items.length > 3 && (
-                      <span className="text-xs text-gray-400">+{order.items.length - 3} more</span>
+                      <span className="text-xs text-gray-600 dark:text-gray-400">+{order.items.length - 3} more</span>
                     )}
-                    <p className="text-sm text-gray-300 ml-2">{order.items[0]?.title}</p>
+                    <p className="text-sm text-gray-700 dark:text-gray-300 ml-2 truncate">{order.items[0]?.title}</p>
                   </div>
 
                   <div className="flex items-center justify-between text-xs text-gray-500">
@@ -115,6 +120,16 @@ export default function OrdersPage() {
               </Link>
             </motion.div>
           ))}
+        </div>
+      )}
+      
+      {!isLoading && orders.length > 0 && (
+        <div className="mt-6">
+          <Pagination 
+            currentPage={page} 
+            totalPages={totalPages} 
+            onPageChange={setPage} 
+          />
         </div>
       )}
     </div>

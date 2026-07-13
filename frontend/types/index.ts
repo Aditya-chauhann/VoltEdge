@@ -210,6 +210,9 @@ export interface RazorpayOptions {
 // Extend Window for Razorpay
 declare global {
   interface Window {
-    Razorpay: new (options: RazorpayOptions) => { open(): void };
+    Razorpay: new (options: RazorpayOptions) => { 
+      open(): void;
+      on(event: string, callback: () => void): void;
+    };
   }
 }

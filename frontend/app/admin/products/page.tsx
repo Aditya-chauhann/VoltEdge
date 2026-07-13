@@ -9,11 +9,12 @@ import { adminApi, getApiError } from '@/lib/api';
 import { Product } from '@/types';
 import { formatPrice } from '@/lib/utils';
 import { PageLoader } from '@/components/ui/LoadingSpinner';
+import { Pagination } from '@/components/ui/Pagination';
 import toast from 'react-hot-toast';
 
 export default function AdminProductsPage() {
   const router = useRouter();
-  const { user, isLoggedIn } = useAuthStore();
+  const { user, isLoggedIn, _hasHydrated } = useAuthStore();
 
   const [products,  setProducts]  = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -23,6 +24,7 @@ export default function AdminProductsPage() {
   const LIMIT = 20;
 
   useEffect(() => {
+    if (!_hasHydrated) return;
     if (!isLoggedIn || user?.role !== 'admin') { router.push('/'); return; }
     loadProducts();
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -82,17 +84,17 @@ export default function AdminProductsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="font-display font-bold text-2xl text-white">Product Management</h1>
-          <p className="text-sm text-gray-400 mt-1">{total.toLocaleString()} products in catalog</p>
+          <h1 className="font-display font-bold text-2xl text-gray-900 dark:text-white">Product Management</h1>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{total.toLocaleString()} products in catalog</p>
         </div>
-        <button onClick={loadProducts} className="btn-ghost flex items-center gap-1.5 text-sm border border-gray-700 px-3 py-2 rounded-xl">
+        <button onClick={loadProducts} className="btn-ghost flex items-center gap-1.5 text-sm border border-gray-300 dark:border-gray-700 px-3 py-2 rounded-xl">
           <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} /> Refresh
         </button>
       </div>
 
       {/* Search */}
       <div className="relative mb-6 max-w-md">
-        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600 dark:text-gray-400" />
         <input
           type="text"
           value={search}
@@ -108,12 +110,12 @@ export default function AdminProductsPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-primary-400/10">
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">Product</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">Price</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">Stock</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">Status</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">Featured</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">Actions</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide">Product</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide">Price</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide">Stock</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide">Status</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide">Featured</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -129,16 +131,16 @@ export default function AdminProductsPage() {
                     <div className="flex items-center gap-3">
                       {product.images?.[0] && (
                         <img src={product.images[0]} alt={product.title}
-                          className="w-10 h-10 object-cover rounded-lg flex-shrink-0 border border-gray-700" />
+                          className="w-10 h-10 object-cover rounded-lg flex-shrink-0 border border-gray-300 dark:border-gray-700" />
                       )}
                       <div className="min-w-0">
-                        <p className="text-white font-medium truncate max-w-[200px]">{product.title}</p>
+                        <p className="text-gray-900 dark:text-white font-medium truncate max-w-[200px]">{product.title}</p>
                         <p className="text-xs text-gray-500">{product.brand ?? '—'}</p>
                       </div>
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    <p className="text-white font-semibold">{formatPrice(product.salePrice)}</p>
+                    <p className="text-gray-900 dark:text-white font-semibold">{formatPrice(product.salePrice)}</p>
                     {product.price > product.salePrice && (
                       <p className="text-xs text-gray-500 line-through">{formatPrice(product.price)}</p>
                     )}
@@ -149,7 +151,7 @@ export default function AdminProductsPage() {
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    <span className={`badge ${product.status === 'active' ? 'bg-success/20 text-success' : 'bg-gray-600/30 text-gray-400'}`}>
+                    <span className={`badge ${product.status === 'active' ? 'bg-success/20 text-success' : 'bg-gray-600/30 text-gray-600 dark:text-gray-400'}`}>
                       {product.status}
                     </span>
                   </td>
@@ -166,7 +168,7 @@ export default function AdminProductsPage() {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <button onClick={() => toggleStatus(product)}
-                        className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-all"
+                        className="p-1.5 rounded-lg text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:text-white hover:bg-white/10 transition-all"
                         title={product.status === 'active' ? 'Hide product' : 'Show product'}
                       >
                         {product.status === 'active' ? <Eye size={14} /> : <EyeOff size={14} />}
@@ -187,19 +189,13 @@ export default function AdminProductsPage() {
       </div>
 
       {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2 mt-6">
-          <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}
-            className="p-2 rounded-lg glass-card text-gray-400 hover:text-white disabled:opacity-40 transition-all">
-            <ChevronLeft size={16} />
-          </button>
-          <span className="text-sm text-gray-400 px-3">Page {page} of {totalPages}</span>
-          <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages}
-            className="p-2 rounded-lg glass-card text-gray-400 hover:text-white disabled:opacity-40 transition-all">
-            <ChevronRight size={16} />
-          </button>
-        </div>
-      )}
+      <div className="glass-card mt-6">
+        <Pagination 
+          currentPage={page} 
+          totalPages={totalPages} 
+          onPageChange={setPage} 
+        />
+      </div>
     </div>
   );
 }

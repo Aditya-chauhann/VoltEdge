@@ -13,6 +13,7 @@ interface AuthStore {
   user:       User | null;
   token:      string | null;
   isLoggedIn: boolean;
+  _hasHydrated: boolean;
 
   setAuth:  (user: User, token: string) => void;
   logout:   () => void;
@@ -25,6 +26,7 @@ export const useAuthStore = create<AuthStore>()(
       user:       null,
       token:      null,
       isLoggedIn: false,
+      _hasHydrated: false,
 
       setAuth: (user, token) => {
         localStorage.setItem('voltedge_token', token);
@@ -46,6 +48,9 @@ export const useAuthStore = create<AuthStore>()(
       name:    'voltedge_auth',
       // Only persist token and user — not derived state
       partialize: (state) => ({ user: state.user, token: state.token, isLoggedIn: state.isLoggedIn }),
+      onRehydrateStorage: () => (state) => {
+        if (state) state._hasHydrated = true;
+      },
     },
   ),
 );

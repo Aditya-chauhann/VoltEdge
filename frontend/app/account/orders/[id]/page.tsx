@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { ChevronLeft, ExternalLink, Package, X } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
-import { ordersApi, getApiError } from '@/lib/api';
+import { ordersApi, issuesApi, getApiError } from '@/lib/api';
 import { Order } from '@/types';
 import { formatPrice, formatDate, ORDER_STATUS_LABELS } from '@/lib/utils';
 import OrderProgressTracker from '@/components/order/OrderProgressTracker';
@@ -15,14 +15,21 @@ import toast from 'react-hot-toast';
 export default function OrderDetailPage() {
   const params   = useParams<{ id: string }>();
   const router   = useRouter();
-  const { isLoggedIn } = useAuthStore();
+  const { isLoggedIn, _hasHydrated } = useAuthStore();
 
   const [order,     setOrder]     = useState<Order | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [reporting, setReporting] = useState(false);
+  const [showIssueModal, setShowIssueModal] = useState(false);
+  const [issueSubject, setIssueSubject] = useState('Return bulk order');
+  const [issueMessage, setIssueMessage] = useState('');
+  const [issuePhone, setIssuePhone] = useState('');
+  const [issueEmail, setIssueEmail] = useState('');
 
   useEffect(() => {
+    if (!_hasHydrated) return;
     if (!isLoggedIn) { router.push('/'); return; }
     async function load() {
       setIsLoading(true);
@@ -56,30 +63,73 @@ export default function OrderDetailPage() {
     }
   };
 
+  const handleReportIssue = async () => {
+    if (!order) return;
+    if (!issueSubject.trim() || !issueMessage.trim()) {
+      toast.error('Please fill in both subject and message');
+      return;
+    }
+    if (issueSubject === 'Return bulk order' && (!issuePhone.trim() || !issueEmail.trim())) {
+      toast.error('Please provide phone and email for return requests');
+      return;
+    }
+    
+    setReporting(true);
+    try {
+      let finalMessage = issueMessage;
+      if (issueSubject === 'Return bulk order') {
+        finalMessage = `Phone: ${issuePhone}\nEmail: ${issueEmail}\n\nReason:\n${issueMessage}`;
+      }
+      
+      await issuesApi.reportIssue(order._id, { subject: issueSubject, message: finalMessage });
+      toast.success('Issue reported successfully. Our team will contact you shortly.');
+      setShowIssueModal(false);
+      setIssueSubject('Return bulk order');
+      setIssueMessage('');
+      setIssuePhone('');
+      setIssueEmail('');
+    } catch (err) {
+      toast.error(getApiError(err));
+    } finally {
+      setReporting(false);
+    }
+  };
+
   if (isLoading) return <PageLoader />;
   if (!order)    return null;
 
-  const canCancel = ['placed', 'confirmed'].includes(order.orderStatus);
+  const canCancel = ['placed', 'confirmed', 'processing'].includes(order.orderStatus);
+  const showIssueBtn = ['shipped', 'out_for_delivery', 'delivered'].includes(order.orderStatus);
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
       {/* Back */}
-      <button onClick={() => router.back()} className="flex items-center gap-1 text-sm text-gray-400 hover:text-white mb-6 transition-colors">
+      <button onClick={() => router.back()} className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:text-white mb-6 transition-colors">
         <ChevronLeft size={16} /> My Orders
       </button>
 
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="font-display font-bold text-2xl text-white">Order #{order.orderNumber}</h1>
-          <p className="text-sm text-gray-400 mt-1">Placed on {formatDate(order.createdAt)}</p>
+          <h1 className="font-display font-bold text-2xl text-gray-900 dark:text-white">Order #{order.orderNumber}</h1>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Placed on {formatDate(order.createdAt)}</p>
         </div>
         {canCancel && (
-          <button
-            onClick={() => setShowCancelModal(true)}
-            className="btn-ghost text-danger flex items-center gap-1.5 text-sm border border-danger/30 px-3 py-2 rounded-xl hover:bg-danger/10"
-          >
-            <X size={14} />
+          <button onClick={() => setShowCancelModal(true)} className="btn-ghost text-sm py-2 px-4 border border-gray-600 rounded-lg hover:bg-gray-100 dark:bg-gray-800 transition-colors">
             Cancel Order
+          </button>
+        )}
+        {showIssueBtn && (
+          <button 
+            onClick={() => {
+              if (order.orderStatus !== 'delivered') {
+                toast.error('You can only report an issue after the product is delivered.');
+              } else {
+                setShowIssueModal(true);
+              }
+            }} 
+            className="btn-ghost text-sm py-2 px-4 border border-gray-600 rounded-lg hover:bg-gray-100 dark:bg-gray-800 transition-colors flex items-center gap-2"
+          >
+            <Package size={16} /> Report Issue
           </button>
         )}
       </div>
@@ -95,8 +145,8 @@ export default function OrderDetailPage() {
       {order.trackingNumber && (
         <div className="glass-card p-5 mb-6 flex items-center justify-between">
           <div>
-            <p className="text-sm text-gray-400">Tracking Number</p>
-            <p className="font-mono font-semibold text-white text-lg">{order.trackingNumber}</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Tracking Number</p>
+            <p className="font-mono font-semibold text-gray-900 dark:text-white text-lg">{order.trackingNumber}</p>
           </div>
           {order.trackingUrl && (
             <a href={order.trackingUrl} target="_blank" rel="noopener noreferrer" className="btn-secondary flex items-center gap-2 text-sm py-2 px-4">
@@ -108,18 +158,18 @@ export default function OrderDetailPage() {
 
       {/* Items */}
       <div className="glass-card p-6 mb-6">
-        <h2 className="font-display font-semibold text-white mb-4">Items Ordered</h2>
+        <h2 className="font-display font-semibold text-gray-900 dark:text-white mb-4">Items Ordered</h2>
         <div className="space-y-4">
           {order.items.map((item, idx) => (
             <div key={idx} className="flex gap-4 items-center">
-              <img src={item.image} alt={item.title} className="w-16 h-16 object-cover rounded-xl border border-gray-700 flex-shrink-0"
+              <img src={item.image} alt={item.title} className="w-16 h-16 object-cover rounded-xl border border-gray-300 dark:border-gray-700 flex-shrink-0"
                 onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-product.png'; }}
               />
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-white text-sm truncate">{item.title}</p>
-                <p className="text-xs text-gray-400">Qty: {item.qty} × {formatPrice(item.unitPrice)}</p>
+                <p className="font-medium text-gray-900 dark:text-white text-sm truncate">{item.title}</p>
+                <p className="text-xs text-gray-600 dark:text-gray-400">Qty: {item.qty} × {formatPrice(item.unitPrice)}</p>
               </div>
-              <p className="font-semibold text-white whitespace-nowrap">{formatPrice(item.total)}</p>
+              <p className="font-semibold text-gray-900 dark:text-white whitespace-nowrap">{formatPrice(item.total)}</p>
             </div>
           ))}
         </div>
@@ -129,15 +179,15 @@ export default function OrderDetailPage() {
       <div className="grid sm:grid-cols-2 gap-6">
         {/* Order summary */}
         <div className="glass-card p-5">
-          <h3 className="font-display font-semibold text-white mb-3">Order Summary</h3>
+          <h3 className="font-display font-semibold text-gray-900 dark:text-white mb-3">Order Summary</h3>
           <div className="space-y-2 text-sm">
-            <div className="flex justify-between"><span className="text-gray-400">Subtotal</span><span className="text-white">{formatPrice(order.subtotal)}</span></div>
-            <div className="flex justify-between"><span className="text-gray-400">Shipping</span><span className="text-success">FREE</span></div>
+            <div className="flex justify-between"><span className="text-gray-600 dark:text-gray-400">Subtotal</span><span className="text-gray-900 dark:text-white">{formatPrice(order.subtotal)}</span></div>
+            <div className="flex justify-between"><span className="text-gray-600 dark:text-gray-400">Shipping</span><span className="text-success">FREE</span></div>
             {order.discount > 0 && (
-              <div className="flex justify-between"><span className="text-gray-400">Discount</span><span className="text-success">-{formatPrice(order.discount)}</span></div>
+              <div className="flex justify-between"><span className="text-gray-600 dark:text-gray-400">Discount</span><span className="text-success">-{formatPrice(order.discount)}</span></div>
             )}
             <div className="flex justify-between font-bold text-base border-t border-primary-400/10 pt-2 mt-1">
-              <span className="text-white">Total</span>
+              <span className="text-gray-900 dark:text-white">Total</span>
               <span className="text-gradient">{formatPrice(order.total)}</span>
             </div>
             <div className="flex justify-between text-xs pt-1">
@@ -155,14 +205,14 @@ export default function OrderDetailPage() {
 
         {/* Delivery address */}
         <div className="glass-card p-5">
-          <h3 className="font-display font-semibold text-white mb-3">Delivery Address</h3>
+          <h3 className="font-display font-semibold text-gray-900 dark:text-white mb-3">Delivery Address</h3>
           <div className="text-sm text-gray-300 space-y-1">
-            <p className="font-semibold text-white">{order.shippingAddress.fullName}</p>
+            <p className="font-semibold text-gray-900 dark:text-white">{order.shippingAddress.fullName}</p>
             <p>{order.shippingAddress.line1}</p>
             {order.shippingAddress.line2 && <p>{order.shippingAddress.line2}</p>}
             <p>{order.shippingAddress.city}, {order.shippingAddress.state}</p>
             <p>{order.shippingAddress.pincode}</p>
-            <p className="text-gray-400 mt-2">📞 {order.shippingAddress.phone}</p>
+            <p className="text-gray-600 dark:text-gray-400 mt-2">📞 {order.shippingAddress.phone}</p>
           </div>
           {order.estimatedDelivery && (
             <div className="mt-3 pt-3 border-t border-primary-400/10">
@@ -179,15 +229,15 @@ export default function OrderDetailPage() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-base-100 border border-gray-700 p-6 rounded-2xl max-w-sm w-full shadow-2xl"
+            className="bg-white dark:bg-base-100 border border-gray-300 dark:border-gray-700 p-6 rounded-2xl max-w-sm w-full shadow-2xl"
           >
-            <h3 className="text-lg font-bold text-white mb-2">Cancel Order</h3>
-            <p className="text-sm text-gray-400 mb-6">Are you sure you want to cancel this order? This action cannot be undone.</p>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Cancel Order</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">Are you sure you want to cancel this order? This action cannot be undone.</p>
             <div className="flex gap-3 justify-end">
               <button
                 onClick={() => setShowCancelModal(false)}
                 disabled={cancelling}
-                className="btn-ghost text-sm py-2 px-4 border border-gray-600 rounded-lg hover:bg-gray-800"
+                className="btn-ghost text-sm py-2 px-4 border border-gray-600 rounded-lg hover:bg-gray-100 dark:bg-gray-800"
               >
                 No, Keep it
               </button>
@@ -197,6 +247,93 @@ export default function OrderDetailPage() {
                 className="btn-primary bg-danger hover:bg-danger/80 shadow-glow-danger text-sm py-2 px-4 border-none"
               >
                 {cancelling ? 'Cancelling...' : 'Yes, Cancel'}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Custom Issue Modal */}
+      {showIssueModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white dark:bg-base-100 border border-gray-300 dark:border-gray-700 p-6 rounded-2xl max-w-sm w-full shadow-2xl"
+          >
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Report an Issue</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Describe the issue you're facing. Our B2B support team will reach out to you.</p>
+            
+            <div className="space-y-4 mb-6">
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Subject</label>
+                <select
+                  value={issueSubject}
+                  onChange={(e) => setIssueSubject(e.target.value)}
+                  className="input-field w-full text-sm py-2"
+                >
+                  <option value="Return bulk order">Return bulk order</option>
+                  <option value="Missing items">Missing items</option>
+                  <option value="Damaged goods">Damaged goods</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              {issueSubject === 'Return bulk order' && (
+                <>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 mb-1">Contact Phone</label>
+                    <input 
+                      type="tel" 
+                      value={issuePhone}
+                      onChange={(e) => setIssuePhone(e.target.value)}
+                      placeholder="Your phone number"
+                      className="input-field w-full text-sm py-2"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 mb-1">Contact Email</label>
+                    <input 
+                      type="email" 
+                      value={issueEmail}
+                      onChange={(e) => setIssueEmail(e.target.value)}
+                      placeholder="Your email address"
+                      className="input-field w-full text-sm py-2"
+                    />
+                  </div>
+                  <div className="bg-warning/10 text-warning p-3 rounded-lg text-xs font-medium border border-warning/20">
+                    ⚠️ Items will only be returned if the reason is genuine and the fault is from our side.
+                  </div>
+                </>
+              )}
+
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">
+                  {issueSubject === 'Return bulk order' ? 'Reason for return' : 'Details'}
+                </label>
+                <textarea 
+                  value={issueMessage}
+                  onChange={(e) => setIssueMessage(e.target.value)}
+                  placeholder="Provide more details about your request..."
+                  className="input-field w-full text-sm py-2 min-h-[100px] resize-none"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowIssueModal(false)}
+                disabled={reporting}
+                className="btn-ghost text-sm py-2 px-4 border border-gray-600 rounded-lg hover:bg-gray-100 dark:bg-gray-800"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleReportIssue}
+                disabled={reporting}
+                className="btn-primary bg-warning hover:bg-warning/80 shadow-glow-warning text-sm py-2 px-4 border-none"
+              >
+                {reporting ? 'Submitting...' : 'Submit Request'}
               </button>
             </div>
           </motion.div>

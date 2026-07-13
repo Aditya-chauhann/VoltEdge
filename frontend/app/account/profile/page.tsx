@@ -11,7 +11,7 @@ import toast from 'react-hot-toast';
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { user, isLoggedIn, updateUser } = useAuthStore();
+  const { user, isLoggedIn, updateUser, _hasHydrated } = useAuthStore();
   const [editingProfile, setEditingProfile] = useState(false);
   const [name,  setName]  = useState(user?.name ?? '');
   const [phone, setPhone] = useState(user?.phone ?? '');
@@ -23,6 +23,7 @@ export default function ProfilePage() {
   });
 
   useEffect(() => {
+    if (!_hasHydrated) return;
     if (!isLoggedIn) router.push('/');
   }, [isLoggedIn, router]);
 
@@ -66,20 +67,20 @@ export default function ProfilePage() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
-      <h1 className="font-display font-bold text-2xl text-white mb-6">My Profile</h1>
+      <h1 className="font-display font-bold text-2xl text-gray-900 dark:text-white mb-6">My Profile</h1>
 
       {/* ── Profile info ─────────────────────────────────────────── */}
       <div className="glass-card p-6 mb-6">
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 bg-gradient-primary rounded-full flex items-center justify-center">
-              <span className="font-display font-bold text-2xl text-white">
+              <span className="font-display font-bold text-2xl text-gray-900 dark:text-white">
                 {user.name.charAt(0).toUpperCase()}
               </span>
             </div>
             <div>
-              <p className="font-display font-bold text-lg text-white">{user.name}</p>
-              <p className="text-sm text-gray-400">{user.email}</p>
+              <p className="font-display font-bold text-lg text-gray-900 dark:text-white">{user.name}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">{user.email}</p>
             </div>
           </div>
           <button
@@ -93,7 +94,7 @@ export default function ProfilePage() {
         {editingProfile ? (
           <div className="space-y-3">
             <div className="relative">
-              <User size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <User size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600 dark:text-gray-400" />
               <input
                 type="text"
                 value={name}
@@ -103,7 +104,7 @@ export default function ProfilePage() {
               />
             </div>
             <div className="relative">
-              <Phone size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <Phone size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600 dark:text-gray-400" />
               <input
                 type="tel"
                 value={phone}
@@ -124,12 +125,12 @@ export default function ProfilePage() {
         ) : (
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <p className="text-gray-400 text-xs mb-1">Email</p>
-              <p className="text-white flex items-center gap-1.5"><Mail size={13} className="text-primary-400" />{user.email}</p>
+              <p className="text-gray-600 dark:text-gray-400 text-xs mb-1">Email</p>
+              <p className="text-gray-900 dark:text-white flex items-center gap-1.5"><Mail size={13} className="text-primary-400" />{user.email}</p>
             </div>
             <div>
-              <p className="text-gray-400 text-xs mb-1">Phone</p>
-              <p className="text-white flex items-center gap-1.5"><Phone size={13} className="text-primary-400" />{user.phone ?? '—'}</p>
+              <p className="text-gray-600 dark:text-gray-400 text-xs mb-1">Phone</p>
+              <p className="text-gray-900 dark:text-white flex items-center gap-1.5"><Phone size={13} className="text-primary-400" />{user.phone ?? '—'}</p>
             </div>
           </div>
         )}
@@ -138,7 +139,7 @@ export default function ProfilePage() {
       {/* ── Addresses ────────────────────────────────────────────── */}
       <div className="glass-card p-6">
         <div className="flex items-center justify-between mb-5">
-          <h2 className="font-display font-semibold text-white">Saved Addresses</h2>
+          <h2 className="font-display font-semibold text-gray-900 dark:text-white">Saved Addresses</h2>
           <button onClick={() => setShowAddrForm(!showAddrForm)} className="btn-primary text-sm py-1.5 px-3 flex items-center gap-1.5">
             <Plus size={14} /> Add
           </button>
@@ -147,7 +148,7 @@ export default function ProfilePage() {
         {/* Add address form */}
         {showAddrForm && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
-            className="mb-5 p-5 bg-base-100 rounded-xl space-y-3">
+            className="mb-5 p-5 bg-white dark:bg-base-100 rounded-xl space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <input className="input-field col-span-2 text-sm" placeholder="Full name *" value={addrForm.fullName}
                 onChange={(e) => setAddrForm({ ...addrForm, fullName: e.target.value })} />
@@ -180,18 +181,18 @@ export default function ProfilePage() {
 
         {/* Address list */}
         {user.addresses?.length === 0 ? (
-          <p className="text-sm text-gray-400 text-center py-8">No addresses saved yet</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400 text-center py-8">No addresses saved yet</p>
         ) : (
           <div className="space-y-3">
             {user.addresses?.map((addr) => (
               <div key={addr._id} className={`flex gap-4 p-4 rounded-xl border transition-all ${
-                addr.isDefault ? 'border-primary-400/50 bg-primary-400/5' : 'border-gray-700'
+                addr.isDefault ? 'border-primary-400/50 bg-primary-400/5' : 'border-gray-300 dark:border-gray-700'
               }`}>
                 <MapPin size={18} className="text-primary-400 flex-shrink-0 mt-0.5" />
                 <div className="flex-1 text-sm">
-                  <p className="font-semibold text-white">{addr.fullName} {addr.isDefault && <span className="badge bg-primary-400/20 text-primary-400 ml-1">Default</span>}</p>
-                  <p className="text-gray-400">{addr.line1}{addr.line2 ? `, ${addr.line2}` : ''}</p>
-                  <p className="text-gray-400">{addr.city}, {addr.state} — {addr.pincode}</p>
+                  <p className="font-semibold text-gray-900 dark:text-white">{addr.fullName} {addr.isDefault && <span className="badge bg-primary-400/20 text-primary-400 ml-1">Default</span>}</p>
+                  <p className="text-gray-600 dark:text-gray-400">{addr.line1}{addr.line2 ? `, ${addr.line2}` : ''}</p>
+                  <p className="text-gray-600 dark:text-gray-400">{addr.city}, {addr.state} — {addr.pincode}</p>
                   <p className="text-gray-500 mt-0.5">{addr.phone}</p>
                 </div>
                 <button onClick={() => addr._id && deleteAddress(addr._id)}

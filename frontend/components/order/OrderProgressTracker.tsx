@@ -1,11 +1,11 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { CheckCircle, Circle, Package, Truck, MapPin, Home, RotateCcw, XCircle } from 'lucide-react';
+import { CheckCircle, Circle, Package, Truck, MapPin, Home, Settings, XCircle } from 'lucide-react';
 import { ORDER_STATUS_LABELS, ORDER_STATUS_STEPS, getStatusStep } from '@/lib/utils';
 import { StatusEvent } from '@/types';
 
-const STEP_ICONS = [Package, CheckCircle, RotateCcw, Truck, MapPin, Home];
+const STEP_ICONS = [Package, CheckCircle, Settings, Truck, MapPin, Home];
 
 interface OrderProgressTrackerProps {
   currentStatus: string;
@@ -28,8 +28,8 @@ export default function OrderProgressTracker({
           <XCircle size={24} className="text-danger" />
         </div>
         <div>
-          <p className="font-semibold text-white">Order Cancelled</p>
-          <p className="text-sm text-gray-400">
+          <p className="font-semibold text-gray-900 dark:text-white">Order Cancelled</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
             {statusHistory.find((e) => e.status === 'cancelled')?.message ?? 'This order has been cancelled.'}
           </p>
         </div>
@@ -41,13 +41,15 @@ export default function OrderProgressTracker({
     <div className={`glass-card p-6 ${className}`}>
       <div className="relative">
         {/* Progress line */}
-        <div className="absolute top-6 left-6 right-6 h-0.5 bg-base-100" style={{ zIndex: 0 }}>
-          <motion.div
-            initial={{ width: '0%' }}
-            animate={{ width: `${(currentStep / (ORDER_STATUS_STEPS.length - 1)) * 100}%` }}
-            transition={{ duration: 0.8, ease: 'easeOut' }}
-            className="h-full bg-gradient-primary"
-          />
+        <div className="absolute top-6 left-0 right-0 px-6 h-0.5" style={{ zIndex: 0 }}>
+          <div className="relative w-full h-full bg-white dark:bg-base-100">
+            <motion.div
+              initial={{ width: '0%' }}
+              animate={{ width: `${(currentStep / (ORDER_STATUS_STEPS.length - 1)) * 100}%` }}
+              transition={{ duration: 0.8, ease: 'easeOut' }}
+              className="h-full bg-gradient-primary"
+            />
+          </div>
         </div>
 
         {/* Steps */}
@@ -70,9 +72,9 @@ export default function OrderProgressTracker({
                       ? 'bg-gradient-primary border-primary-400 shadow-glow-primary'
                       : isCurrent
                         ? 'bg-primary-400/20 border-primary-400 animate-pulse-glow'
-                        : 'bg-base-50 border-gray-600'}`}
+                        : 'bg-white dark:bg-base-50 border-gray-600'}`}
                 >
-                  <Icon size={18} className={isDone || isCurrent ? 'text-white' : 'text-gray-500'} />
+                  <Icon size={18} className={isDone || isCurrent ? 'text-gray-900 dark:text-white' : 'text-gray-500'} />
                 </motion.div>
 
                 {/* Label */}

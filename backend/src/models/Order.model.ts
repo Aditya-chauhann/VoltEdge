@@ -82,7 +82,7 @@ export interface IOrder extends Document {
   razorpaySignature?: string;
 
   // Fulfillment
-  orderStatus:       'placed' | 'confirmed' | 'processing' | 'shipped' | 'out_for_delivery' | 'delivered' | 'cancelled' | 'return_requested' | 'returned';
+  orderStatus:       'placed' | 'confirmed' | 'processing' | 'shipped' | 'out_for_delivery' | 'delivered' | 'cancelled';
   statusHistory:     IStatusEvent[];
   cjOrderId?:        string;        // CJ Dropshipping order ID
   cjFulfillmentRef?: string;
@@ -126,7 +126,7 @@ const OrderSchema = new Schema<IOrder>(
 
     orderStatus: {
       type:    String,
-      enum:    ['placed', 'confirmed', 'processing', 'shipped', 'out_for_delivery', 'delivered', 'cancelled', 'return_requested', 'returned'],
+      enum:    ['placed', 'confirmed', 'processing', 'shipped', 'out_for_delivery', 'delivered', 'cancelled'],
       default: 'placed',
       index:   true,
     },

@@ -26,10 +26,10 @@ export default function TodaysDeals({ products, isLoading }: TodaysDealsProps) {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <span className="badge bg-danger text-white text-sm">🔥 HOT DEALS</span>
+              <span className="badge bg-danger text-gray-900 dark:text-white text-sm">🔥 HOT DEALS</span>
               <h2 className="section-heading">Today&apos;s Deals</h2>
             </div>
-            <p className="text-sm text-gray-400">Hurry — prices drop back at midnight!</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Hurry — prices drop back at midnight!</p>
           </div>
 
           <div className="flex items-center gap-4">

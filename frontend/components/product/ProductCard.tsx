@@ -62,7 +62,7 @@ export default function ProductCard({ product, priority }: ProductCardProps) {
         className="product-card group relative h-full flex flex-col"
       >
         {/* Image container */}
-        <div className="relative overflow-hidden bg-base-100 aspect-square rounded-t-2xl">
+        <div className="relative overflow-hidden bg-white dark:bg-base-100 aspect-square rounded-t-2xl">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={image}
@@ -74,10 +74,10 @@ export default function ProductCard({ product, priority }: ProductCardProps) {
           {/* Badges */}
           <div className="absolute top-3 left-3 flex flex-col gap-1">
             {discount > 0 && (
-              <span className="badge bg-danger text-white">-{discount}%</span>
+              <span className="badge bg-danger text-gray-900 dark:text-white">-{discount}%</span>
             )}
             {product.isNewArrival && (
-              <span className="badge bg-success text-white">New</span>
+              <span className="badge bg-success text-gray-900 dark:text-white">New</span>
             )}
             {product.isBestSeller && (
               <span className="badge bg-gradient-gold text-black">🔥 Hot</span>
@@ -93,8 +93,8 @@ export default function ProductCard({ product, priority }: ProductCardProps) {
             className={`absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center
                         backdrop-blur-sm transition-all duration-200
                         ${inWishlist
-                          ? 'bg-danger/90 text-white'
-                          : 'bg-black/40 text-gray-300 hover:bg-danger/80 hover:text-white'}`}
+                          ? 'bg-danger/90 text-gray-900 dark:text-white'
+                          : 'bg-black/40 text-gray-300 hover:bg-danger/80 hover:text-gray-900 dark:text-white'}`}
             aria-label={inWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
           >
             <Heart size={14} fill={inWishlist ? 'currentColor' : 'none'} />
@@ -111,8 +111,8 @@ export default function ProductCard({ product, priority }: ProductCardProps) {
               className={`w-full py-3 flex items-center justify-center gap-2 text-sm font-semibold
                          transition-all duration-200
                          ${inStock
-                           ? 'bg-gradient-primary text-white hover:opacity-90'
-                           : 'bg-gray-700 text-gray-400 cursor-not-allowed'}`}
+                           ? 'bg-gradient-primary text-gray-900 dark:text-white hover:opacity-90'
+                           : 'bg-gray-700 text-gray-600 dark:text-gray-400 cursor-not-allowed'}`}
             >
               {isAddingToCart ? (
                 <span className="flex items-center gap-2">
@@ -142,7 +142,7 @@ export default function ProductCard({ product, priority }: ProductCardProps) {
           )}
 
           {/* Title */}
-          <h3 className="text-sm font-medium text-white leading-snug line-clamp-2">
+          <h3 className="text-sm font-medium text-gray-900 dark:text-white leading-snug line-clamp-2">
             {product.title}
           </h3>
 
@@ -158,13 +158,13 @@ export default function ProductCard({ product, priority }: ProductCardProps) {
                   />
                 ))}
               </div>
-              <span className="text-xs text-gray-400">({product.reviewCount})</span>
+              <span className="text-xs text-gray-600 dark:text-gray-400">({product.reviewCount})</span>
             </div>
           )}
 
           {/* Price */}
           <div className="flex items-baseline gap-2 mt-auto">
-            <span className="font-display font-bold text-lg text-white">
+            <span className="font-display font-bold text-lg text-gray-900 dark:text-white">
               {formatPrice(product.salePrice)}
             </span>
             {discount > 0 && (

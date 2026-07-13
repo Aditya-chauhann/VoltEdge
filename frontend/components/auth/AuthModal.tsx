@@ -191,11 +191,11 @@ export default function AuthModal() {
               <div className="flex items-center justify-between px-6 pt-6 pb-0">
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
-                    <Zap size={16} className="text-white" fill="white" />
+                    <Zap size={16} className="text-gray-900 dark:text-white" fill="white" />
                   </div>
-                  <span className="font-display font-bold text-lg text-white">VoltEdge</span>
+                  <span className="font-display font-bold text-lg text-gray-900 dark:text-white">VoltEdge</span>
                 </div>
-                <button onClick={closeAuthModal} className="p-2 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-all">
+                <button onClick={closeAuthModal} className="p-2 rounded-xl text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:text-white hover:bg-white/5 transition-all">
                   <X size={18} />
                 </button>
               </div>
@@ -212,8 +212,8 @@ export default function AuthModal() {
               {/* ─── Login ─────────────────────────────────────────── */}
               {mode === 'login' && (
                 <div className="px-6 py-6">
-                  <h2 className="font-display font-bold text-2xl text-white mb-1">Welcome back</h2>
-                  <p className="text-sm text-gray-400 mb-6">Sign in to your VoltEdge account</p>
+                  <h2 className="font-display font-bold text-2xl text-gray-900 dark:text-white mb-1">Welcome back</h2>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">Sign in to your VoltEdge account</p>
 
                   <form onSubmit={handleLogin} className="space-y-4">
                     <InputField icon={<Mail size={16} />} type="email" placeholder="Email address"
@@ -222,7 +222,7 @@ export default function AuthModal() {
                       placeholder="Password" value={form.password} onChange={(v) => updateField('password', v)}
                       suffix={
                         <button type="button" onClick={() => setShowPassword(!showPassword)}
-                          className="text-gray-400 hover:text-white transition-colors">
+                          className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:text-white transition-colors">
                           {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                         </button>
                       }
@@ -239,7 +239,7 @@ export default function AuthModal() {
                     </button>
                   </form>
 
-                  <p className="text-center text-sm text-gray-400 mt-5">
+                  <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-5">
                     Don&apos;t have an account?{' '}
                     <button onClick={() => setMode('register')} className="text-primary-400 font-medium hover:underline">
                       Create one
@@ -251,8 +251,8 @@ export default function AuthModal() {
               {/* ─── Register ──────────────────────────────────────── */}
               {mode === 'register' && (
                 <div className="px-6 py-6">
-                  <h2 className="font-display font-bold text-2xl text-white mb-1">Create account</h2>
-                  <p className="text-sm text-gray-400 mb-6">Join VoltEdge for the best deals</p>
+                  <h2 className="font-display font-bold text-2xl text-gray-900 dark:text-white mb-1">Create account</h2>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">Join VoltEdge for the best deals</p>
 
                   <form onSubmit={handleRegister} className="space-y-3">
                     <InputField icon={<User size={16} />} type="text" placeholder="Full name"
@@ -265,7 +265,7 @@ export default function AuthModal() {
                       placeholder="Password (min 6 chars)" value={form.password} onChange={(v) => updateField('password', v)}
                       suffix={
                         <button type="button" onClick={() => setShowPassword(!showPassword)}
-                          className="text-gray-400 hover:text-white transition-colors">
+                          className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:text-white transition-colors">
                           {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                         </button>
                       }
@@ -280,7 +280,7 @@ export default function AuthModal() {
                     </button>
                   </form>
 
-                  <p className="text-center text-sm text-gray-400 mt-4">
+                  <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-4">
                     Already have an account?{' '}
                     <button onClick={() => setMode('login')} className="text-primary-400 font-medium hover:underline">
                       Sign in
@@ -292,11 +292,11 @@ export default function AuthModal() {
               {/* ─── Verify OTP ─────────────────────────────────────── */}
               {mode === 'otp' && (
                 <div className="px-6 py-6">
-                  <button onClick={() => setMode('login')} className="flex items-center gap-1 text-xs text-gray-400 hover:text-white mb-4 transition-colors">
+                  <button onClick={() => setMode('login')} className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:text-white mb-4 transition-colors">
                     <ArrowLeft size={14} /> Back to login
                   </button>
-                  <h2 className="font-display font-bold text-2xl text-white mb-1">Verify your email</h2>
-                  <p className="text-sm text-gray-400 mb-6">Enter the 6-digit code sent to <span className="text-white">{form.email}</span></p>
+                  <h2 className="font-display font-bold text-2xl text-gray-900 dark:text-white mb-1">Verify your email</h2>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">Enter the 6-digit code sent to <span className="text-gray-900 dark:text-white">{form.email}</span></p>
 
                   <form onSubmit={handleVerifyOtp} className="space-y-4">
                     <InputField icon={<Mail size={16} />} type="text" placeholder="6-digit OTP code"
@@ -312,11 +312,11 @@ export default function AuthModal() {
               {/* ─── Forgot — step 1 ──────────────────────────────── */}
               {mode === 'forgot' && (
                 <div className="px-6 py-6">
-                  <button onClick={() => setMode('login')} className="flex items-center gap-1 text-xs text-gray-400 hover:text-white mb-4 transition-colors">
+                  <button onClick={() => setMode('login')} className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:text-white mb-4 transition-colors">
                     <ArrowLeft size={14} /> Back to login
                   </button>
-                  <h2 className="font-display font-bold text-2xl text-white mb-1">Forgot password?</h2>
-                  <p className="text-sm text-gray-400 mb-6">Enter your email to reset your password</p>
+                  <h2 className="font-display font-bold text-2xl text-gray-900 dark:text-white mb-1">Forgot password?</h2>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">Enter your email to reset your password</p>
 
                   <form onSubmit={handleForgotCheck} className="space-y-4">
                     <InputField icon={<Mail size={16} />} type="email" placeholder="Your registered email"
@@ -332,15 +332,15 @@ export default function AuthModal() {
               {/* ─── Forgot — step 2 (new password) ─────────────────── */}
               {mode === 'forgot-reset' && (
                 <div className="px-6 py-6">
-                  <h2 className="font-display font-bold text-2xl text-white mb-1">Set new password</h2>
-                  <p className="text-sm text-gray-400 mb-6">Enter and confirm your new password</p>
+                  <h2 className="font-display font-bold text-2xl text-gray-900 dark:text-white mb-1">Set new password</h2>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">Enter and confirm your new password</p>
 
                   <form onSubmit={handleForgotReset} className="space-y-4">
                     <InputField icon={<Lock size={16} />} type={showPassword ? 'text' : 'password'}
                       placeholder="New password" value={form.newPassword} onChange={(v) => updateField('newPassword', v)}
                       suffix={
                         <button type="button" onClick={() => setShowPassword(!showPassword)}
-                          className="text-gray-400 hover:text-white transition-colors">
+                          className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:text-white transition-colors">
                           {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                         </button>
                       }
@@ -393,7 +393,7 @@ function InputField({
 }) {
   return (
     <div className="relative flex items-center">
-      <div className="absolute left-3 text-gray-400 pointer-events-none">{icon}</div>
+      <div className="absolute left-3 text-gray-600 dark:text-gray-400 pointer-events-none">{icon}</div>
       <input
         type={type}
         placeholder={placeholder}
@@ -411,7 +411,7 @@ function InputField({
 
 function Spinner() {
   return (
-    <svg className="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24" fill="none">
+    <svg className="animate-spin h-4 w-4 text-gray-900 dark:text-white" viewBox="0 0 24 24" fill="none">
       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
     </svg>

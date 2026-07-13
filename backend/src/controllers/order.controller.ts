@@ -7,6 +7,7 @@
 import { Response } from 'express';
 import { Order } from '../models/Order.model';
 import { Cart } from '../models/Cart.model';
+import { FinanceConfig } from '../models/FinanceConfig.model';
 import { User } from '../models/User.model';
 import { asyncHandler } from '../utils/asyncHandler';
 import { ApiError } from '../utils/ApiError';
@@ -129,7 +130,8 @@ export const createRazorpayOrderHandler = asyncHandler(async (req: AuthRequest, 
   const discount = cart.couponDiscount ?? 0;
   const { subtotal, total } = calculateTotals(orderItems, shippingFee, discount);
 
-  if (total < 1) throw new ApiError(400, 'Order total must be at least ₹1');
+  const finConfig = await FinanceConfig.findOne() || await FinanceConfig.create({});
+  if (total < finConfig.minimumOrderAmount) throw new ApiError(400, `Minimum order value for wholesale is ₹${finConfig.minimumOrderAmount.toLocaleString()}`);
 
   const orderNumber = generateOrderNumber();
   const rzpOrder = await createRazorpayOrder(total, orderNumber);
@@ -277,6 +279,9 @@ export const placeCODOrder = asyncHandler(async (req: AuthRequest, res: Response
   const discount = cart.couponDiscount ?? 0;
   const { subtotal, total } = calculateTotals(orderItems, 0, discount);
 
+  const finConfig = await FinanceConfig.findOne() || await FinanceConfig.create({});
+  if (total < finConfig.minimumOrderAmount) throw new ApiError(400, `Minimum order value for wholesale is ₹${finConfig.minimumOrderAmount.toLocaleString()}`);
+
   const orderNumber = generateOrderNumber();
 
   const order = await Order.create({
@@ -403,25 +408,3 @@ export const cancelOrder = asyncHandler(async (req: AuthRequest, res: Response) 
   res.json(ok('Order cancelled', order));
 });
 
-// ─── Return request ───────────────────────────────────────────────────────────
-
-export const requestReturn = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const { id } = req.params as { id: string };
-
-  const order = await Order.findOne({ _id: id, user: req.user!.id });
-  if (!order) throw new ApiError(404, 'Order not found');
-
-  if (order.orderStatus !== 'delivered') {
-    throw new ApiError(400, 'Return requests can only be made for delivered orders');
-  }
-
-  order.orderStatus = 'return_requested';
-  order.statusHistory.push({
-    status: 'return_requested',
-    message: req.body.reason ?? 'Return requested by customer',
-    timestamp: new Date(),
-  });
-  await order.save();
-
-  res.json(ok('Return request submitted', order));
-});

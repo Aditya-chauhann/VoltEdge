@@ -47,12 +47,12 @@ function SearchContent() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
-        <h1 className="font-display font-bold text-2xl text-white flex items-center gap-2">
+        <h1 className="font-display font-bold text-2xl text-gray-900 dark:text-white flex items-center gap-2">
           <Search size={22} className="text-primary-400" />
           {query ? `Results for "${query}"` : 'Search Products'}
         </h1>
         {pagination && !isLoading && (
-          <p className="text-sm text-gray-400 mt-1">{pagination.total.toLocaleString()} products found</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{pagination.total.toLocaleString()} products found</p>
         )}
       </div>
 
@@ -63,8 +63,8 @@ function SearchContent() {
       ) : products.length === 0 ? (
         <div className="glass-card p-16 text-center">
           <p className="text-5xl mb-4">🔍</p>
-          <p className="font-display font-bold text-white text-xl mb-2">No results found</p>
-          <p className="text-gray-400">Try different keywords or browse all products</p>
+          <p className="font-display font-bold text-gray-900 dark:text-white text-xl mb-2">No results found</p>
+          <p className="text-gray-600 dark:text-gray-400">Try different keywords or browse all products</p>
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
@@ -85,7 +85,7 @@ function SearchContent() {
         <div className="flex items-center justify-center gap-2 mt-10">
           <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={!pagination.hasPrev}
             className="btn-secondary py-2 px-4 text-sm disabled:opacity-40">← Prev</button>
-          <span className="px-4 py-2 text-sm text-gray-400">Page {pagination.page} of {pagination.totalPages}</span>
+          <span className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400">Page {pagination.page} of {pagination.totalPages}</span>
           <button onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))} disabled={!pagination.hasNext}
             className="btn-secondary py-2 px-4 text-sm disabled:opacity-40">Next →</button>
         </div>

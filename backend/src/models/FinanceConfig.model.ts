@@ -5,6 +5,13 @@ export interface IFinanceConfig extends Document {
   taxRatePercent: number;
   paymentGatewayFeePercent: number;
   fixedGatewayFeeInr: number;
+  minimumOrderAmount: number;
+  currencyRates: {
+    USD: number;
+    EUR: number;
+    GBP: number;
+    AED: number;
+  };
 }
 
 const financeConfigSchema = new Schema<IFinanceConfig>(
@@ -13,6 +20,13 @@ const financeConfigSchema = new Schema<IFinanceConfig>(
     taxRatePercent: { type: Number, default: 18 },
     paymentGatewayFeePercent: { type: Number, default: 2 },
     fixedGatewayFeeInr: { type: Number, default: 0 },
+    minimumOrderAmount: { type: Number, default: 50000 },
+    currencyRates: {
+      USD: { type: Number, default: 83.33 },
+      EUR: { type: Number, default: 90.90 },
+      GBP: { type: Number, default: 105.26 },
+      AED: { type: Number, default: 22.68 },
+    },
   },
   { timestamps: true }
 );

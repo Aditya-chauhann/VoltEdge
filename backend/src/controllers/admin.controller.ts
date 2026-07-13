@@ -28,16 +28,17 @@ export const getDashboard = asyncHandler(async (_req: Request, res: Response) =>
     totalUsers, newUsers,
     recentOrders,
     statusCounts,
-    pendingActionOrders
+    pendingActionOrders,
+    prepaidCancelledOrders
   ] = await Promise.all([
     Order.countDocuments(),
-    Order.countDocuments({ createdAt: { $gte: start } }),
+    Order.countDocuments({ createdAt: { $gte: start }, orderStatus: { $nin: ['cancelled', 'returned'] } }),
     Order.aggregate([
-      { $match: { paymentStatus: 'paid' } },
+      { $match: { paymentStatus: 'paid', orderStatus: { $nin: ['cancelled', 'returned'] } } },
       { $group: { _id: null, total: { $sum: '$total' } } },
     ]).then((r) => r[0]?.total ?? 0),
     Order.aggregate([
-      { $match: { paymentStatus: 'paid', createdAt: { $gte: start } } },
+      { $match: { paymentStatus: 'paid', createdAt: { $gte: start }, orderStatus: { $nin: ['cancelled', 'returned'] } } },
       { $group: { _id: null, total: { $sum: '$total' } } },
     ]).then((r) => r[0]?.total ?? 0),
     User.countDocuments({ role: 'customer' }),
@@ -51,7 +52,8 @@ export const getDashboard = asyncHandler(async (_req: Request, res: Response) =>
     Order.aggregate([
       { $group: { _id: '$orderStatus', count: { $sum: 1 } } }
     ]),
-    Order.countDocuments({ orderStatus: { $in: ['placed', 'return_requested'] } })
+    Order.countDocuments({ orderStatus: { $in: ['placed', 'return_requested'] } }),
+    Order.countDocuments({ orderStatus: 'cancelled', paymentStatus: 'paid', paymentMethod: { $ne: 'cod' } })
   ]);
 
   // Transform statusCounts into a funnel map
@@ -72,6 +74,7 @@ export const getDashboard = asyncHandler(async (_req: Request, res: Response) =>
   const pendingActions = {
     ordersToConfirm: funnelMap['placed'] || 0,
     returnsRequested: funnelMap['return_requested'] || 0,
+    refundsPending: prepaidCancelledOrders,
   };
 
   res.json(ok('Dashboard stats fetched', {

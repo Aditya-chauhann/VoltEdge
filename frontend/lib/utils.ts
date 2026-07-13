@@ -6,13 +6,35 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-/** Format a number as Indian Rupees */
-export function formatPrice(amount: number): string {
-  return new Intl.NumberFormat('en-IN', {
-    style:    'currency',
-    currency: 'INR',
-    maximumFractionDigits: 0,
-  }).format(amount);
+import { useSettingsStore } from '@/store/settingsStore';
+
+/** Format a number as the user's selected currency */
+export function formatPrice(amountInINR: number): string {
+  try {
+    const state = useSettingsStore.getState();
+    const currency = state.selectedCurrency || 'INR';
+    
+    let rate = 1;
+    if (currency !== 'INR' && state.currencyRates) {
+      // @ts-ignore
+      rate = state.currencyRates[currency] || 1;
+    }
+    
+    const convertedAmount = currency === 'INR' ? amountInINR : amountInINR / rate;
+    
+    return new Intl.NumberFormat(currency === 'INR' ? 'en-IN' : 'en-US', {
+      style:    'currency',
+      currency: currency,
+      maximumFractionDigits: currency === 'INR' ? 0 : 2,
+    }).format(convertedAmount);
+  } catch (e) {
+    // Fallback if store is not initialized during SSR
+    return new Intl.NumberFormat('en-IN', {
+      style:    'currency',
+      currency: 'INR',
+      maximumFractionDigits: 0,
+    }).format(amountInINR);
+  }
 }
 
 /** Calculate discount percentage */
