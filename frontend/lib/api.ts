@@ -109,7 +109,7 @@ export const productsApi = {
 };
 
 export const publicApi = {
-  getPolicy: (type: 'refund_shipping' | 'privacy') => apiClient.get(`/config/policy/${type}`),
+  getPolicy: (type: 'refund_shipping' | 'privacy' | 'terms') => apiClient.get(`/config/policy/${type}`),
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -201,8 +201,8 @@ export const adminApi = {
   createBanner:     (data: object) => apiClient.post('/admin/banners', data),
   updateBanner:     (id: string, data: object) => apiClient.put(`/admin/banners/${id}`, data),
   deleteBanner:     (id: string) => apiClient.delete(`/admin/banners/${id}`),
-  getPolicy:        (type: 'refund_shipping' | 'privacy') => apiClient.get(`/config/policy/${type}`),
-  updatePolicy:     (type: 'refund_shipping' | 'privacy', data: { content: string }) => apiClient.put(`/admin/policies/${type}`, data),
+  getPolicy:        (type: 'refund_shipping' | 'privacy' | 'terms') => apiClient.get(`/config/policy/${type}`),
+  updatePolicy:     (type: 'refund_shipping' | 'privacy' | 'terms', data: { content: string }) => apiClient.put(`/admin/policies/${type}`, data),
 
   // Finance
   financeConfig:    () => apiClient.get('/admin/finance'),

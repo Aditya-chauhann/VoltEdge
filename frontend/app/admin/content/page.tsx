@@ -15,7 +15,8 @@ export default function AdminContentPage() {
 
   const [refundPolicy, setRefundPolicy] = useState('');
   const [privacyPolicy, setPrivacyPolicy] = useState('');
-  const [savingPolicy, setSavingPolicy] = useState<'refund_shipping' | 'privacy' | null>(null);
+  const [termsPolicy, setTermsPolicy] = useState('');
+  const [savingPolicy, setSavingPolicy] = useState<'refund_shipping' | 'privacy' | 'terms' | null>(null);
 
   // Drawer
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -49,6 +50,9 @@ export default function AdminContentPage() {
 
       const privacyRes = await adminApi.getPolicy('privacy').catch(() => null);
       if (privacyRes?.data?.data) setPrivacyPolicy(privacyRes.data.data.content);
+
+      const termsRes = await adminApi.getPolicy('terms').catch(() => null);
+      if (termsRes?.data?.data) setTermsPolicy(termsRes.data.data.content);
     } catch (err) {
       console.error('Failed to fetch policies', err);
     }
@@ -122,12 +126,16 @@ export default function AdminContentPage() {
     }
   };
 
-  const handleSavePolicy = async (type: 'refund_shipping' | 'privacy') => {
+  const handleSavePolicy = async (type: 'refund_shipping' | 'privacy' | 'terms') => {
     setSavingPolicy(type);
     try {
-      const content = type === 'refund_shipping' ? refundPolicy : privacyPolicy;
+      const content = type === 'refund_shipping' ? refundPolicy : type === 'privacy' ? privacyPolicy : termsPolicy;
       await adminApi.updatePolicy(type, { content });
-      toast.success(type === 'refund_shipping' ? 'Refund & Shipping Policy updated' : 'Privacy Policy updated');
+      toast.success(
+        type === 'refund_shipping' ? 'Refund & Shipping Policy updated' 
+        : type === 'privacy' ? 'Privacy Policy updated' 
+        : 'Terms of Service updated'
+      );
     } catch (err) {
       toast.error(getApiError(err));
     } finally {
@@ -254,6 +262,20 @@ export default function AdminContentPage() {
               </button>
             </div>
             <ReactQuillWrapper value={privacyPolicy} onChange={setPrivacyPolicy} />
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-medium text-gray-900 dark:text-white">Terms of Service</h2>
+              <button
+                onClick={() => handleSavePolicy('terms')}
+                disabled={savingPolicy === 'terms'}
+                className="btn-primary text-sm py-2 px-6"
+              >
+                {savingPolicy === 'terms' ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+            <ReactQuillWrapper value={termsPolicy} onChange={setTermsPolicy} />
           </div>
         </div>
       )}
