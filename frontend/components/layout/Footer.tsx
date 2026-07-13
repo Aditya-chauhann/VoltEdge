@@ -14,16 +14,15 @@ const categories = [
 
 const support = [
   { name: 'My Orders',     href: '/account/orders' },
-  { name: 'Return Policy', href: '/return-policy' },
+  { name: 'Refund/Shipping Policy', href: '/refund-shipping-policy' },
   { name: 'Track Order',   href: '/account/orders' },
   { name: 'Contact Us',    href: 'mailto:support@voltedge.in' },
 ];
 
 const legal = [
-  { name: 'Privacy Policy',    href: '#' },
-  { name: 'Terms of Service',  href: '#' },
-  { name: 'Refund Policy',     href: '/return-policy' },
-  { name: 'Shipping Policy',   href: '#' },
+  { name: 'Privacy Policy',          href: '/privacy-policy' },
+  { name: 'Terms of Service',        href: '#' },
+  { name: 'Refund/Shipping Policy',  href: '/refund-shipping-policy' },
 ];
 
 export default function Footer() {
@@ -133,7 +132,7 @@ export default function Footer() {
               {['Razorpay', 'UPI', 'Visa', 'Mastercard', 'COD'].map((p) => (
                 <span
                   key={p}
-                  className="text-xs px-2 py-1 bg-white dark:bg-base-100 border border-primary-400/10 rounded text-gray-600 dark:text-gray-400"
+                  className="text-xs px-2 py-1 bg-white dark:bg-base-100 border border-primary-400/10 rounded text-gray-600 dark:text-gray-400 hover:border-primary-400 hover:text-primary-500 transition-colors cursor-pointer"
                 >
                   {p}
                 </span>

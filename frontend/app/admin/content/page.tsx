@@ -5,10 +5,17 @@ import { adminApi, getApiError } from '@/lib/api';
 import toast from 'react-hot-toast';
 import { Plus, Trash2, Edit2, GripVertical, Image as ImageIcon } from 'lucide-react';
 import { AdminDrawer } from '@/components/ui/AdminDrawer';
+import ReactQuillWrapper from '@/components/ui/ReactQuillWrapper';
 
 export default function AdminContentPage() {
+  const [activeTab, setActiveTab] = useState<'banners' | 'policies'>('banners');
+  
   const [banners, setBanners] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const [refundPolicy, setRefundPolicy] = useState('');
+  const [privacyPolicy, setPrivacyPolicy] = useState('');
+  const [savingPolicy, setSavingPolicy] = useState<'refund_shipping' | 'privacy' | null>(null);
 
   // Drawer
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -26,20 +33,36 @@ export default function AdminContentPage() {
     order: 0,
   });
 
-  useEffect(() => {
-    fetchBanners();
-  }, []);
-
   const fetchBanners = async () => {
     try {
       const res = await adminApi.banners();
       setBanners(res.data.data);
     } catch (err) {
       toast.error(getApiError(err));
-    } finally {
-      setLoading(false);
     }
   };
+
+  const fetchPolicies = async () => {
+    try {
+      const refundRes = await adminApi.getPolicy('refund_shipping').catch(() => null);
+      if (refundRes?.data?.data) setRefundPolicy(refundRes.data.data.content);
+
+      const privacyRes = await adminApi.getPolicy('privacy').catch(() => null);
+      if (privacyRes?.data?.data) setPrivacyPolicy(privacyRes.data.data.content);
+    } catch (err) {
+      console.error('Failed to fetch policies', err);
+    }
+  };
+
+  const loadAll = async () => {
+    setLoading(true);
+    await Promise.all([fetchBanners(), fetchPolicies()]);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadAll();
+  }, []);
 
   const handleOpenCreate = () => {
     setEditingBanner(null);
@@ -99,17 +122,47 @@ export default function AdminContentPage() {
     }
   };
 
+  const handleSavePolicy = async (type: 'refund_shipping' | 'privacy') => {
+    setSavingPolicy(type);
+    try {
+      const content = type === 'refund_shipping' ? refundPolicy : privacyPolicy;
+      await adminApi.updatePolicy(type, { content });
+      toast.success(type === 'refund_shipping' ? 'Refund & Shipping Policy updated' : 'Privacy Policy updated');
+    } catch (err) {
+      toast.error(getApiError(err));
+    } finally {
+      setSavingPolicy(null);
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-medium text-gray-900 dark:text-white">Homepage Banners</h2>
+      <div className="flex gap-4 border-b border-gray-200 dark:border-gray-800 mb-6 pb-2">
         <button
-          onClick={handleOpenCreate}
-          className="flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-500 text-gray-900 dark:text-white rounded-lg transition-colors font-medium text-sm"
+          onClick={() => setActiveTab('banners')}
+          className={`pb-2 px-1 font-medium transition-colors ${activeTab === 'banners' ? 'text-primary-500 border-b-2 border-primary-500' : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'}`}
         >
-          <Plus size={16} /> Add Banner
+          Homepage Banners
+        </button>
+        <button
+          onClick={() => setActiveTab('policies')}
+          className={`pb-2 px-1 font-medium transition-colors ${activeTab === 'policies' ? 'text-primary-500 border-b-2 border-primary-500' : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'}`}
+        >
+          Policies (Legal)
         </button>
       </div>
+
+      {activeTab === 'banners' && (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-medium text-gray-900 dark:text-white">Homepage Banners</h2>
+            <button
+              onClick={handleOpenCreate}
+              className="flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-500 text-gray-900 dark:text-white rounded-lg transition-colors font-medium text-sm"
+            >
+              <Plus size={16} /> Add Banner
+            </button>
+          </div>
 
       {loading ? (
         <div className="flex justify-center py-12">
@@ -168,6 +221,40 @@ export default function AdminContentPage() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+      </div>
+      )}
+
+      {activeTab === 'policies' && (
+        <div className="space-y-10">
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-medium text-gray-900 dark:text-white">Refund & Shipping Policy</h2>
+              <button
+                onClick={() => handleSavePolicy('refund_shipping')}
+                disabled={savingPolicy === 'refund_shipping'}
+                className="btn-primary text-sm py-2 px-6"
+              >
+                {savingPolicy === 'refund_shipping' ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+            <ReactQuillWrapper value={refundPolicy} onChange={setRefundPolicy} />
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-medium text-gray-900 dark:text-white">Privacy Policy</h2>
+              <button
+                onClick={() => handleSavePolicy('privacy')}
+                disabled={savingPolicy === 'privacy'}
+                className="btn-primary text-sm py-2 px-6"
+              >
+                {savingPolicy === 'privacy' ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+            <ReactQuillWrapper value={privacyPolicy} onChange={setPrivacyPolicy} />
+          </div>
         </div>
       )}
 

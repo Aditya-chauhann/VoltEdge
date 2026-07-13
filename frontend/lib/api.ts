@@ -106,6 +106,8 @@ export const productsApi = {
   getCategories: () => apiClient.get('/products/categories'),
 
   getBanners: () => apiClient.get('/products/banners'),
+
+  getPolicy: (type: 'refund_shipping' | 'privacy') => apiClient.get(`/config/policy/${type}`),
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -197,6 +199,7 @@ export const adminApi = {
   createBanner:     (data: object) => apiClient.post('/admin/banners', data),
   updateBanner:     (id: string, data: object) => apiClient.put(`/admin/banners/${id}`, data),
   deleteBanner:     (id: string) => apiClient.delete(`/admin/banners/${id}`),
+  updatePolicy:     (type: 'refund_shipping' | 'privacy', data: { content: string }) => apiClient.put(`/admin/policies/${type}`, data),
 
   // Finance
   financeConfig:    () => apiClient.get('/admin/finance'),

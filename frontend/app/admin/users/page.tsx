@@ -29,7 +29,7 @@ export default function AdminUsersPage() {
 
   const fetchUsers = async () => {
     try {
-      const res = await adminApi.users({ search, page, limit: 20 });
+      const res = await adminApi.users({ search, page, limit: 10 });
       setUsers(res.data.data.users);
       setTotalPages(res.data.data.pagination?.totalPages || 1);
     } catch (err) {

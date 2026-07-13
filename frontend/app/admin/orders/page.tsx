@@ -30,7 +30,7 @@ export default function AdminOrdersPage() {
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      const params: any = { page, limit: 20 };
+      const params: any = { page, limit: 10 };
       if (activeTab === 'refund_pending') {
         params.status = 'cancelled';
         params.paymentStatus = 'paid';

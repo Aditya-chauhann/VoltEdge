@@ -39,7 +39,7 @@ export default function AdminIssuesPage() {
   const loadIssues = async () => {
     setIsLoading(true);
     try {
-      const res = await issuesApi.getIssues({ page, limit: 20 });
+      const res = await issuesApi.getIssues({ page, limit: 10 });
       setIssues(res.data.data.issues);
       setTotalPages(res.data.data.pagination?.totalPages || 1);
     } catch (err) {

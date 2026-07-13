@@ -9,6 +9,7 @@ import {
 } from '../controllers/admin.controller';
 import { protect } from '../middleware/auth.middleware';
 import { adminOnly } from '../middleware/admin.middleware';
+import { updatePolicy } from '../controllers/config.controller';
 
 const router = Router();
 
@@ -42,6 +43,9 @@ router.get('/banners',                 adminGetBanners);
 router.post('/banners',                adminCreateBanner);
 router.put('/banners/:id',             adminUpdateBanner);
 router.delete('/banners/:id',          adminDeleteBanner);
+
+// Policies
+router.put('/policies/:type',          updatePolicy);
 
 // Finance
 router.get('/finance',                 adminGetFinanceConfig);
