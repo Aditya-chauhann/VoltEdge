@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useCartStore } from '@/store/cartStore';
+import { useWishlistStore } from '@/store/wishlistStore';
 import { useUIStore } from '@/store/uiStore';
 import { useSettingsStore, Currency } from '@/store/settingsStore';
 import { productsApi, getApiError } from '@/lib/api';
@@ -29,6 +30,7 @@ export default function Navbar() {
 
   const { isLoggedIn, user, logout } = useAuthStore();
   const { itemCount, openDrawer }    = useCartStore();
+  const { ids: wishlistIds }         = useWishlistStore();
   const { openAuthModal }            = useUIStore();
   const { selectedCurrency, setCurrency, fetchConfig } = useSettingsStore();
 
@@ -236,6 +238,11 @@ export default function Navbar() {
                 className="relative p-2 rounded-xl text-gray-600 hover:text-primary-600 dark:text-gray-300 dark:hover:text-white hover:bg-white/5 transition-all"
               >
                 <Heart size={20} />
+                {wishlistIds.size > 0 && (
+                  <span className="absolute 1 top-1 right-1 bg-primary-500 text-white text-[10px] font-bold h-4 w-4 rounded-full flex items-center justify-center shadow-lg border border-white dark:border-base-50">
+                    {wishlistIds.size}
+                  </span>
+                )}
               </Link>
             )}
 

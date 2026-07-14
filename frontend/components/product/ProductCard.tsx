@@ -41,6 +41,12 @@ export default function ProductCard({ product, priority }: ProductCardProps) {
 
     setIsAddingToCart(true);
     await addItem(product._id, 1);
+    
+    // Remove from wishlist if it was there
+    if (inWishlist) {
+      await toggleWishlist(product._id);
+    }
+    
     setIsAddingToCart(false);
   };
 

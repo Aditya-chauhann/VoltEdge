@@ -28,6 +28,7 @@ function mapToFrontendProduct(p: any, rate: number): any {
     images,
     price: Number((basePrice * 1.2).toFixed(2)),
     salePrice: basePrice,
+    stock: p.variants ? p.variants.reduce((acc: number, v: any) => acc + (v.stock || 0), 0) : 99,
     status: 'active',
   };
 }

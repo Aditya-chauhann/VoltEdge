@@ -339,7 +339,7 @@ export default function HeroSection({ banners }: { banners?: any[] }) {
       </div>
 
       {/* Slide controls */}
-      <div className="relative pb-10 flex items-center justify-center gap-4 z-50">
+      <div className="relative pb-10 flex items-center justify-center gap-4 z-20">
         {/* Prev */}
         <button
           onClick={() => paginate(-1)}
@@ -351,7 +351,7 @@ export default function HeroSection({ banners }: { banners?: any[] }) {
         </button>
 
         {/* Dots */}
-        <div className="flex items-center gap-2 z-50">
+        <div className="flex items-center gap-2 z-20">
           {slides.map((_, idx) => (
             <button
               key={idx}
