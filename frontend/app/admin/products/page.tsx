@@ -20,6 +20,7 @@ export default function AdminProductsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [search,    setSearch]    = useState('');
   const [page,      setPage]      = useState(1);
+  const [total,     setTotal]     = useState(0);
   const LIMIT = 10;
 
   useEffect(() => {
