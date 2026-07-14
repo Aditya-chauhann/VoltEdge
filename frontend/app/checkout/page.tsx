@@ -138,10 +138,8 @@ export default function CheckoutPage() {
       };
 
       const rzp = new window.Razorpay(options);
-      rzp.on('payment.failed', async (response: any) => {
-        try {
-          await ordersApi.cancel(orderId, 'Payment failed');
-        } catch (e) {}
+      rzp.on('payment.failed', () => {
+        ordersApi.cancel(orderId, 'Payment failed').catch(() => {});
         toast.error('Payment failed or cancelled');
       });
       rzp.open();
