@@ -59,7 +59,7 @@ export default function RootLayout({
         </ThemeProvider>
 
         <Toaster
-          position="top-right"
+          position="bottom-right"
           toastOptions={{
             style: {
               background: '#1A1A2E',

@@ -47,19 +47,26 @@ export const useWishlistStore = create<WishlistStore>()((set, get) => ({
     // Optimistic update
     set((state) => {
       const ids = new Set(state.ids);
+      const items = [...state.items];
+      
       if (wasInWishlist) {
         ids.delete(productId);
+        const idx = items.findIndex(p => p._id === productId);
+        if (idx > -1) items.splice(idx, 1);
       } else {
         ids.add(productId);
       }
-      return { ids };
+      return { ids, items };
     });
+
+    // Instant notification
+    toast.success(wasInWishlist ? 'Removed from wishlist' : 'Added to wishlist ❤️');
 
     try {
       await wishlistApi.toggle(productId);
-      toast.success(wasInWishlist ? 'Removed from wishlist' : 'Added to wishlist ❤️');
     } catch (err) {
       // Revert on error
+      toast.error('Action failed. Reverting...');
       set((state) => {
         const ids = new Set(state.ids);
         if (wasInWishlist) ids.add(productId);

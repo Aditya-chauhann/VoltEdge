@@ -127,15 +127,21 @@ export default function CheckoutPage() {
           }
         },
         modal: {
-          ondismiss: () => {
+          ondismiss: async () => {
             setIsPlacing(false);
+            try {
+              await ordersApi.cancel(orderId, 'Payment cancelled by user');
+            } catch (e) {}
             toast('Payment cancelled', { icon: 'ℹ️' });
           },
         },
       };
 
       const rzp = new window.Razorpay(options);
-      rzp.on('payment.failed', () => {
+      rzp.on('payment.failed', async (response: any) => {
+        try {
+          await ordersApi.cancel(orderId, 'Payment failed');
+        } catch (e) {}
         toast.error('Payment failed or cancelled');
       });
       rzp.open();

@@ -64,12 +64,18 @@ export const useCartStore = create<CartStore>()((set, get) => ({
   addItem: async (productId, qty = 1, variantId) => {
     set({ isLoading: true });
     try {
-      const res  = await cartApi.add({ productId, qty, variantId });
+      const promise = cartApi.add({ productId, qty, variantId });
+      toast.promise(promise, {
+        loading: 'Adding to cart...',
+        success: 'Added to cart!',
+        error: 'Failed to add item'
+      });
+      const res = await promise;
       const cart = res.data.data as Cart;
       set({ cart, isOpen: true });
-      toast.success('Added to cart!');
     } catch (err) {
-      toast.error(getApiError(err));
+      // toast.error is handled by toast.promise automatically, but we might want to log it
+      console.error(getApiError(err));
     } finally {
       set({ isLoading: false });
     }
