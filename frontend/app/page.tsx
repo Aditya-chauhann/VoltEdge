@@ -7,6 +7,7 @@ import TodaysDeals from '@/components/home/TodaysDeals';
 import { TrendingSection, BestSellers, NewArrivals } from '@/components/home/TrendingSection';
 import CategorySection from '@/components/home/CategorySection';
 import NewsletterBanner from '@/components/home/NewsletterBanner';
+import TopBanner from '@/components/home/TopBanner';
 import { productsApi, getApiError } from '@/lib/api';
 import { Product, Category } from '@/types';
 
@@ -50,6 +51,7 @@ export default function HomePage() {
 
   return (
     <>
+      <TopBanner />
       <HeroSection banners={banners} />
       <TrustBadges />
       <TodaysDeals products={deals} isLoading={isLoading} />

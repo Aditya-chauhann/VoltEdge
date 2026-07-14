@@ -58,6 +58,22 @@ a {
   text-decoration: none;
 }
 
+/* Marquee Animation */
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  display: inline-block;
+  white-space: nowrap;
+  animation: marquee 25s linear infinite;
+}
+
+.animate-marquee > span {
+  display: inline-block;
+}
+
 img {
   max-width: 100%;
   height: auto;
