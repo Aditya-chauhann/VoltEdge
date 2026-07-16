@@ -13,6 +13,7 @@ import {
   CJHomeCategory,
 } from '../types';
 import { redisService } from './redis.service';
+import { SyncLog } from '../models/SyncLog.model';
 import { cjAuthService } from './cjAuth.service';
 
 const MOCK_PRODUCTS: CJProduct[] = [
@@ -764,8 +765,24 @@ class CjApiService {
     const resolvedParams = { ...params, page, limit, keyword };
     const filterKey = JSON.stringify(resolvedParams);
     const cacheKey = redisService.productListKey(page, limit, filterKey);
-    const cached = await redisService.get<CJProductListResponse>(cacheKey);
-    if (cached) return cached;
+    const cached = await redisService.get<any>(cacheKey);
+    
+    const ONE_HOUR = 3600 * 1000;
+    const SEVEN_DAYS = 7 * 24 * 3600;
+
+    if (cached) {
+      const isWrapped = !!cached.fetchedAt && !!cached.data;
+      const data: CJProductListResponse = isWrapped ? cached.data : cached;
+      const fetchedAt: number = isWrapped ? cached.fetchedAt : 0;
+
+      // Stale-While-Revalidate trigger
+      if (Date.now() - fetchedAt > ONE_HOUR && !this.useMock) {
+        this.backgroundSyncProductList(cacheKey, resolvedParams, data).catch(() => {});
+      }
+
+      return data;
+    }
+
     let result: CJProductListResponse;
 
     if (this.useMock) {
@@ -783,28 +800,86 @@ class CjApiService {
       }
     }
 
-    await redisService.set(cacheKey, result, redisService.getProductTtl());
+    await redisService.set(cacheKey, { data: result, fetchedAt: Date.now() }, SEVEN_DAYS);
     return result;
+  }
+
+  private async backgroundSyncProductList(cacheKey: string, params: any, oldData: CJProductListResponse) {
+    try {
+      const result = await this.fetchProductList(params);
+      const hasChanges = result.total !== oldData.total || JSON.stringify(result.list) !== JSON.stringify(oldData.list);
+      
+      await redisService.set(cacheKey, { data: result, fetchedAt: Date.now() }, 7 * 24 * 3600);
+      
+      await SyncLog.create({
+        type: 'PRODUCT_LIST',
+        queryKey: cacheKey,
+        totalProducts: result.total,
+        hasChanges
+      });
+      logger.info('Background sync completed', { cacheKey, hasChanges });
+    } catch(err) {
+      logger.error('Background sync failed', { cacheKey, error: (err as Error).message });
+    }
   }
 
   async getProductDetail(pid: string): Promise<CJProduct | null> {
     const cacheKey = redisService.productDetailKey(pid);
-    const cached = await redisService.get<CJProduct>(cacheKey);
-    if (cached) return cached;
+    const cached = await redisService.get<any>(cacheKey);
+    
+    const ONE_HOUR = 3600 * 1000;
+    const SEVEN_DAYS = 7 * 24 * 3600;
+
+    if (cached) {
+      const isWrapped = !!cached.fetchedAt && !!cached.data;
+      const data: CJProduct | null = isWrapped ? cached.data : cached;
+      const fetchedAt: number = isWrapped ? cached.fetchedAt : 0;
+
+      if (Date.now() - fetchedAt > ONE_HOUR && !this.useMock) {
+        this.backgroundSyncProductDetail(cacheKey, pid, data).catch(() => {});
+      }
+
+      return data;
+    }
 
     let product: CJProduct | null = null;
 
     if (this.useMock) {
       product = MOCK_PRODUCTS.find((p) => p.pid === pid) ?? null;
     } else {
-      const raw = await this.request<CJProductDetailRaw>(`/product/query?pid=${encodeURIComponent(pid)}`);
-      product = mapProductDetail(raw);
+      try {
+        const raw = await this.request<CJProductDetailRaw>(`/product/query?pid=${encodeURIComponent(pid)}`);
+        product = mapProductDetail(raw);
+      } catch (err) {
+        logger.warn('CJ product detail fetch failed', { error: (err as Error).message, pid });
+      }
     }
 
     if (product) {
-      await redisService.set(cacheKey, product, redisService.getProductTtl());
+      await redisService.set(cacheKey, { data: product, fetchedAt: Date.now() }, SEVEN_DAYS);
     }
     return product;
+  }
+
+  private async backgroundSyncProductDetail(cacheKey: string, pid: string, oldData: CJProduct | null) {
+    try {
+      const raw = await this.request<CJProductDetailRaw>(`/product/query?pid=${encodeURIComponent(pid)}`);
+      const product = mapProductDetail(raw);
+      
+      if (product) {
+        const hasChanges = !oldData || JSON.stringify(product) !== JSON.stringify(oldData);
+        await redisService.set(cacheKey, { data: product, fetchedAt: Date.now() }, 7 * 24 * 3600);
+        
+        await SyncLog.create({
+          type: 'PRODUCT_DETAIL',
+          queryKey: cacheKey,
+          totalProducts: 1,
+          hasChanges
+        });
+      }
+    } catch(err) {
+      logger.error('Background sync detail failed', { cacheKey, error: (err as Error).message });
+    }
   }
 
   async searchProducts(keyword: string, page = 1, limit = 20): Promise<CJProductListResponse> {
