@@ -27,9 +27,10 @@ export const env = {
   // MongoDB
   MONGODB_URI: requireEnv('MONGODB_URI'),
 
-  // JWT
+  // JWT & Admin
   JWT_SECRET:     requireEnv('JWT_SECRET'),
   JWT_EXPIRES_IN: optionalEnv('JWT_EXPIRES_IN', '7d'),
+  ADMIN_SECRET:   optionalEnv('ADMIN_SECRET', 'Admin@123456'),
 
   // CORS
   FRONTEND_URL: optionalEnv('FRONTEND_URL', 'http://localhost:3000'),

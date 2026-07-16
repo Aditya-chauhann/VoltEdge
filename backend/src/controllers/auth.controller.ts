@@ -44,7 +44,7 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
   const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
   // Check if admin secret matches
-  const role = (adminSecret === 'Admin@123456') ? 'admin' : 'customer';
+  const role = (adminSecret === env.ADMIN_SECRET) ? 'admin' : 'customer';
 
   // passwordHash field triggers bcrypt hashing in the User pre-save hook
   const user = await User.create({
