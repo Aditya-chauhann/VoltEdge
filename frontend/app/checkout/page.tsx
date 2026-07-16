@@ -9,7 +9,7 @@ import { useCartStore } from '@/store/cartStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { ordersApi, couponsApi, getApiError } from '@/lib/api';
 import { formatPrice } from '@/lib/utils';
-import { Address, RazorpayOptions } from '@/types';
+import { Address } from '@/types';
 import toast from 'react-hot-toast';
 
 type Step = 'address' | 'payment';
@@ -22,7 +22,7 @@ export default function CheckoutPage() {
 
   const [step,         setStep]         = useState<Step>('address');
   const [selectedAddr, setSelectedAddr] = useState<Address | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState<'razorpay'>('razorpay');
+  const [paymentMethod, setPaymentMethod] = useState<'stripe'>('stripe');
   const [couponCode,   setCouponCode]   = useState('');
   const [couponDisc,   setCouponDisc]   = useState(0);
   const [isPlacing,    setIsPlacing]    = useState(false);
@@ -66,15 +66,7 @@ export default function CheckoutPage() {
     }
   };
 
-  const loadRazorpay = () =>
-    new Promise<boolean>((resolve) => {
-      if (window.Razorpay) { resolve(true); return; }
-      const script    = document.createElement('script');
-      script.src      = 'https://checkout.razorpay.com/v1/checkout.js';
-      script.onload   = () => resolve(true);
-      script.onerror  = () => resolve(false);
-      document.body.appendChild(script);
-    });
+
 
   const handlePlaceOrder = async () => {
     if (!selectedAddr) { toast.error('Please select a delivery address'); return; }
@@ -90,59 +82,15 @@ export default function CheckoutPage() {
         couponCode:      couponCode.trim() || undefined,
       };
 
-      const ok = await loadRazorpay();
-      if (!ok) { toast.error('Failed to load payment gateway'); setIsPlacing(false); return; }
+      const orderRes = await ordersApi.createStripeCheckout(orderData);
+      const { sessionUrl } = orderRes.data.data as { sessionUrl: string };
 
-      const orderRes = await ordersApi.createRazorpay(orderData);
-      const { razorpayOrderId, amount, currency, orderId } = orderRes.data.data as {
-        razorpayOrderId: string; amount: number; currency: string; orderId: string;
-      };
-
-      const options: RazorpayOptions = {
-        key:          process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
-        amount,
-        currency,
-        order_id:     razorpayOrderId,
-        name:         'VoltEdge Wholesale',
-        description:  'B2B Order Payment',
-        prefill: {
-          name:    user?.name,
-          email:   user?.email,
-          contact: user?.phone,
-        },
-        theme: { color: '#8b5cf6' },
-        handler: async (response) => {
-          try {
-            await ordersApi.verifyRazorpay({
-              razorpayOrderId:   response.razorpay_order_id,
-              razorpayPaymentId: response.razorpay_payment_id,
-              razorpaySignature: response.razorpay_signature,
-              orderId,
-            });
-            await clearCart();
-            toast.success('Payment successful! 🎉');
-            router.push(`/account/orders/${orderId}`);
-          } catch (err) {
-            toast.error('Payment verification failed. Contact support.');
-          }
-        },
-        modal: {
-          ondismiss: async () => {
-            setIsPlacing(false);
-            try {
-              await ordersApi.cancel(orderId, 'Payment cancelled by user');
-            } catch (e) {}
-            toast('Payment cancelled', { icon: 'ℹ️' });
-          },
-        },
-      };
-
-      const rzp = new window.Razorpay(options);
-      rzp.on('payment.failed', () => {
-        ordersApi.cancel(orderId, 'Payment failed').catch(() => {});
-        toast.error('Payment failed or cancelled');
-      });
-      rzp.open();
+      if (sessionUrl) {
+        window.location.href = sessionUrl;
+      } else {
+        toast.error('Failed to get checkout URL');
+        setIsPlacing(false);
+      }
     } catch (err) {
       toast.error(getApiError(err));
     } finally {
@@ -251,21 +199,21 @@ export default function CheckoutPage() {
               </h2>
 
               <div className="space-y-3">
-                {/* Razorpay */}
+                {/* Stripe */}
                 <label className={`flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition-all ${
-                  paymentMethod === 'razorpay'
+                  paymentMethod === 'stripe'
                     ? 'border-primary-400 bg-primary-400/10'
                     : 'border-gray-300 dark:border-gray-700 hover:border-primary-400/40'
                 }`}>
-                  <input type="radio" name="payment" value="razorpay"
-                    checked={paymentMethod === 'razorpay'}
-                    onChange={() => setPaymentMethod('razorpay')}
+                  <input type="radio" name="payment" value="stripe"
+                    checked={paymentMethod === 'stripe'}
+                    onChange={() => setPaymentMethod('stripe')}
                     className="accent-primary-400"
                   />
                   <CreditCard size={20} className="text-primary-400" />
                   <div>
                     <p className="font-semibold text-gray-900 dark:text-white text-sm">Pay Online</p>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">UPI, Cards, Netbanking via Razorpay</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">Cards, Apple/Google Pay via Stripe</p>
                   </div>
                   <span className="ml-auto badge bg-success/20 text-success">Recommended</span>
                 </label>

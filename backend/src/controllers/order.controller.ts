@@ -7,13 +7,15 @@
 import { Response } from 'express';
 import { Order } from '../models/Order.model';
 import { Cart } from '../models/Cart.model';
+import { Address } from '../models/Address.model';
 import { FinanceConfig } from '../models/FinanceConfig.model';
 import { User } from '../models/User.model';
 import { asyncHandler } from '../utils/asyncHandler';
 import { ApiError } from '../utils/ApiError';
 import { ok } from '../utils/ApiResponse';
 import { AuthRequest } from '../middleware/auth.middleware';
-import { createRazorpayOrder, verifyRazorpaySignature } from '../services/razorpay.service';
+import { createStripeCheckoutSession, verifyStripeSession } from '../services/stripe.service';
+import { env } from '../config/env';
 import { cjApiService } from '../services/cjApi.service';
 import { pricingService } from '../services/pricing.service';
 import { currencyService } from '../services/currency.service';
@@ -103,9 +105,9 @@ async function buildOrderItems(userId: string) {
   return { orderItems, cart };
 }
 
-// ─── Step 1: Create Razorpay order ───────────────────────────────────────────
+// ─── Stripe Checkout ───────────────────────────────────────────────────────────
 
-export const createRazorpayOrderHandler = asyncHandler(async (req: AuthRequest, res: Response) => {
+export const createStripeCheckout = asyncHandler(async (req: AuthRequest, res: Response) => {
   const { addressId, couponCode } = req.body as { addressId?: string; couponCode?: string };
 
   const user = await User.findById(req.user!.id);
@@ -134,7 +136,6 @@ export const createRazorpayOrderHandler = asyncHandler(async (req: AuthRequest, 
   if (total < finConfig.minimumOrderAmount) throw new ApiError(400, `Minimum order value for wholesale is ₹${finConfig.minimumOrderAmount.toLocaleString()}`);
 
   const orderNumber = generateOrderNumber();
-  const rzpOrder = await createRazorpayOrder(total, orderNumber);
 
   // Lock the cart during checkout
   await Cart.findOneAndUpdate({ user: req.user!.id }, { lockedForCheckout: true });
@@ -150,57 +151,56 @@ export const createRazorpayOrderHandler = asyncHandler(async (req: AuthRequest, 
     discount,
     couponCode: cart.couponCode,
     total,
-    paymentMethod: 'razorpay',
+    paymentMethod: 'stripe',
     paymentStatus: 'pending',
-    razorpayOrderId: rzpOrder.id,
     orderStatus: 'placed',
     statusHistory: [{ status: 'placed', message: 'Order created, awaiting payment', timestamp: new Date() }],
   });
 
-  res.json(ok('Razorpay order created', {
+  // Create Stripe Checkout Session
+  const session = await createStripeCheckoutSession({
+    orderId: order._id.toString(),
+    orderNumber: order.orderNumber,
+    amount: Math.round(total * 100), // Stripe expects amounts in smallest currency unit (paise)
+    currency: 'inr',
+    customerEmail: user.email,
+    successUrl: `${env.FRONTEND_URL}/checkout/success`,
+  });
+
+  order.stripeSessionId = session.id;
+  await order.save();
+
+  res.json(ok('Stripe checkout session created', {
     orderId: order._id,
     orderNumber: order.orderNumber,
-    razorpayOrderId: rzpOrder.id,
-    amount: rzpOrder.amount,  // paise
-    currency: 'INR',
-    total,
+    sessionId: session.id,
+    sessionUrl: session.url,
   }));
 });
 
-// ─── Step 2: Verify Razorpay payment ─────────────────────────────────────────
+export const verifyStripeCheckout = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const { sessionId } = req.body as { sessionId: string };
+  if (!sessionId) throw new ApiError(400, 'Session ID is required');
 
-export const verifyRazorpayPayment = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const {
-    orderId,
-    razorpayOrderId,
-    razorpayPaymentId,
-    razorpaySignature,
-  } = req.body as Record<string, string>;
-
-  const order = await Order.findOne({ _id: orderId, user: req.user!.id });
+  const session = await verifyStripeSession(sessionId);
+  
+  const order = await Order.findOne({ stripeSessionId: sessionId, user: req.user!.id });
   if (!order) throw new ApiError(404, 'Order not found');
   if (order.paymentStatus === 'paid') {
     return res.json(ok('Payment already verified', { orderNumber: order.orderNumber }));
   }
 
-  const isValid = verifyRazorpaySignature({
-    razorpayOrderId,
-    razorpayPaymentId,
-    razorpaySignature,
-  });
-
-  if (!isValid) {
+  if (session.payment_status !== 'paid') {
     order.paymentStatus = 'failed';
-    order.statusHistory.push({ status: 'failed', message: 'Payment signature invalid', timestamp: new Date() });
+    order.statusHistory.push({ status: 'failed', message: 'Payment verification failed or pending', timestamp: new Date() });
     await order.save();
     await Cart.findOneAndUpdate({ user: req.user!.id }, { lockedForCheckout: false });
-    throw new ApiError(400, 'Payment verification failed — invalid signature');
+    throw new ApiError(400, 'Payment not completed');
   }
 
   // Mark as paid
   order.paymentStatus = 'paid';
-  order.razorpayPaymentId = razorpayPaymentId;
-  order.razorpaySignature = razorpaySignature;
+  order.stripePaymentIntentId = session.payment_intent as string;
   order.orderStatus = 'confirmed';
   order.statusHistory.push({
     status: 'confirmed',

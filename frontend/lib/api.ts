@@ -134,8 +134,8 @@ export const cartApi = {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const ordersApi = {
-  createRazorpay: (data: object) => apiClient.post('/orders/razorpay/create', data),
-  verifyRazorpay: (data: object) => apiClient.post('/orders/razorpay/verify', data),
+  createStripeCheckout: (data: object) => apiClient.post('/orders/stripe/create-checkout', data),
+  verifyStripeCheckout: (data: object) => apiClient.post('/orders/stripe/verify-checkout', data),
   placeCOD:       (data: object) => apiClient.post('/orders/cod', data),
   list:           (params?: AxiosRequestConfig['params']) => apiClient.get('/orders', { params }),
   get:            (id: string)   => apiClient.get(`/orders/${id}`),

@@ -75,11 +75,10 @@ export interface IOrder extends Document {
   total:           number; // grand total (INR)
 
   // Payment
-  paymentMethod:     'razorpay' | 'cod';
+  paymentMethod:     'stripe' | 'cod';
   paymentStatus:     'pending' | 'paid' | 'failed' | 'refunded';
-  razorpayOrderId?:  string;
-  razorpayPaymentId?: string;
-  razorpaySignature?: string;
+  stripeSessionId?: string;
+  stripePaymentIntentId?: string;
 
   // Fulfillment
   orderStatus:       'placed' | 'confirmed' | 'processing' | 'shipped' | 'out_for_delivery' | 'delivered' | 'cancelled';
@@ -118,11 +117,10 @@ const OrderSchema = new Schema<IOrder>(
     couponCode:  { type: String },
     total:       { type: Number, required: true },
 
-    paymentMethod:      { type: String, enum: ['razorpay', 'cod'], required: true },
+    paymentMethod:      { type: String, enum: ['stripe', 'cod'], required: true },
     paymentStatus:      { type: String, enum: ['pending', 'paid', 'failed', 'refunded'], default: 'pending' },
-    razorpayOrderId:    { type: String },
-    razorpayPaymentId:  { type: String },
-    razorpaySignature:  { type: String },
+    stripeSessionId:    { type: String },
+    stripePaymentIntentId: { type: String },
 
     orderStatus: {
       type:    String,

@@ -139,7 +139,7 @@ export interface Order {
   discount:        number;
   couponCode?:     string;
   total:           number;
-  paymentMethod:   'razorpay' | 'cod';
+  paymentMethod:   'stripe' | 'cod';
   paymentStatus:   'pending' | 'paid' | 'failed' | 'refunded';
   orderStatus:     string;
   statusHistory:   StatusEvent[];
@@ -188,31 +188,9 @@ export interface ApiResponse<T = unknown> {
 
 export type ToastType = 'success' | 'error' | 'info' | 'warning';
 
-export interface RazorpayOptions {
-  key:          string;
-  amount:       number;
-  currency:     string;
-  order_id:     string;
-  name:         string;
-  description:  string;
-  prefill?:     { name?: string; email?: string; contact?: string };
-  theme?:       { color?: string };
-  handler:      (response: {
-    razorpay_payment_id: string;
-    razorpay_order_id:   string;
-    razorpay_signature:  string;
-  }) => void;
-  modal?: {
-    ondismiss?: () => void;
-  };
-}
-
-// Extend Window for Razorpay
+// Note: Stripe types are handled via standard redirect or elements sdk.
 declare global {
   interface Window {
-    Razorpay: new (options: RazorpayOptions) => { 
-      open(): void;
-      on(event: string, callback: () => void): void;
-    };
+    Stripe: any;
   }
 }

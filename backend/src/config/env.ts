@@ -39,10 +39,9 @@ export const env = {
   CJ_EMAIL:   requireEnv('CJ_EMAIL'),
   CJ_API_KEY: requireEnv('CJ_API_KEY'),
 
-  // Razorpay
-  RAZORPAY_KEY_ID:        requireEnv('RAZORPAY_KEY_ID'),
-  RAZORPAY_KEY_SECRET:    requireEnv('RAZORPAY_KEY_SECRET'),
-  RAZORPAY_WEBHOOK_SECRET: optionalEnv('RAZORPAY_WEBHOOK_SECRET', ''),
+  // Stripe
+  STRIPE_SECRET_KEY:      optionalEnv('STRIPE_SECRET_KEY', ''),
+  STRIPE_WEBHOOK_SECRET:  optionalEnv('STRIPE_WEBHOOK_SECRET', ''),
 
   // CJ Dropshipping API & Settings
   CJ_API_BASE_URL: optionalEnv('CJ_API_BASE_URL', 'https://developers.cjdropshipping.com/api2.0/v1'),

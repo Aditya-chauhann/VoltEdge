@@ -42,8 +42,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={inter.variable}>
       <head>
-        {/* Razorpay checkout script */}
-        <script src="https://checkout.razorpay.com/v1/checkout.js" async />
+
       </head>
       <body className="bg-white dark:bg-base text-gray-900 dark:text-white antialiased">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
