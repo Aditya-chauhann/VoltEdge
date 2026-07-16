@@ -1,63 +1,61 @@
 /**
- * Razorpay Webhook Route
- * Receives payment events (payment.captured, payment.failed, refund.created).
+ * Stripe Webhook Route
+ * Receives payment events (checkout.session.completed, etc.).
  * The raw body must NOT be parsed by express.json() — it's needed for
- * HMAC signature verification. The webhook route therefore registers its
- * own body parser using express.raw().
+ * Stripe signature verification. The webhook route therefore registers its
+ * own body parser using express.raw() in app.ts.
  */
 
 import { Router, Request, Response } from 'express';
-import { verifyWebhookSignature } from '../services/razorpay.service';
+import { stripe } from '../services/stripe.service';
+import { env } from '../config/env';
 import { Order } from '../models/Order.model';
 import { webhookLimiter } from '../middleware/rateLimiter';
+import Stripe from 'stripe';
 
 const router = Router();
 
-// Use raw body so we can verify the HMAC signature
 router.post(
   '/',
   webhookLimiter,
   (req: Request, res: Response) => {
-    const signature = req.headers['x-razorpay-signature'] as string;
+    const signature = req.headers['stripe-signature'] as string;
+    let event: Stripe.Event;
 
-    // Verify webhook authenticity
-    if (!verifyWebhookSignature(req.body as Buffer, signature)) {
-      console.warn('⚠️  Invalid Razorpay webhook signature — ignored');
-      return res.status(400).json({ success: false, message: 'Invalid signature' });
-    }
-
-    let event: { event: string; payload: { payment?: { entity?: { id?: string; order_id?: string; status?: string } } } };
     try {
-      event = JSON.parse((req.body as Buffer).toString());
-    } catch {
-      return res.status(400).json({ success: false, message: 'Invalid JSON payload' });
+      // Verify webhook authenticity
+      event = stripe.webhooks.constructEvent(
+        req.body,
+        signature,
+        env.STRIPE_WEBHOOK_SECRET
+      );
+    } catch (err: any) {
+      console.warn('⚠️  Invalid Stripe webhook signature — ignored', err.message);
+      return res.status(400).send(`Webhook Error: ${err.message}`);
     }
 
-    // Acknowledge receipt immediately (Razorpay expects a fast 200)
+    // Acknowledge receipt immediately (Stripe expects a fast 200)
     res.status(200).json({ success: true });
 
     // Process event asynchronously
     handleWebhookEvent(event).catch((err) =>
       console.error('Webhook processing error:', err),
     );
-  },
+  }
 );
 
-async function handleWebhookEvent(event: {
-  event: string;
-  payload: { payment?: { entity?: { id?: string; order_id?: string; status?: string } } };
-}): Promise<void> {
-  const entity = event.payload?.payment?.entity;
-
-  switch (event.event) {
-    case 'payment.captured': {
+async function handleWebhookEvent(event: Stripe.Event): Promise<void> {
+  switch (event.type) {
+    case 'checkout.session.completed': {
+      const session = event.data.object as Stripe.Checkout.Session;
+      
       // Payment captured — update order status if not already done via /verify endpoint
-      if (entity?.order_id) {
+      if (session.id) {
         await Order.findOneAndUpdate(
-          { razorpayOrderId: entity.order_id, paymentStatus: { $ne: 'paid' } },
+          { stripeSessionId: session.id, paymentStatus: { $ne: 'paid' } },
           {
             paymentStatus:    'paid',
-            razorpayPaymentId: entity.id,
+            stripePaymentIntentId: session.payment_intent as string,
             orderStatus:      'confirmed',
             $push: {
               statusHistory: {
@@ -72,10 +70,11 @@ async function handleWebhookEvent(event: {
       break;
     }
 
-    case 'payment.failed': {
-      if (entity?.order_id) {
+    case 'checkout.session.async_payment_failed': {
+      const session = event.data.object as Stripe.Checkout.Session;
+      if (session.id) {
         await Order.findOneAndUpdate(
-          { razorpayOrderId: entity.order_id },
+          { stripeSessionId: session.id },
           {
             paymentStatus: 'failed',
             $push: {
@@ -91,13 +90,14 @@ async function handleWebhookEvent(event: {
       break;
     }
 
-    case 'refund.created': {
-      console.log('Refund created:', entity?.id);
+    case 'charge.refunded': {
+      const charge = event.data.object as Stripe.Charge;
+      console.log('Refund created:', charge.id);
       break;
     }
 
     default:
-      console.log(`Unhandled webhook event: ${event.event}`);
+      console.log(`Unhandled webhook event: ${event.type}`);
   }
 }
 

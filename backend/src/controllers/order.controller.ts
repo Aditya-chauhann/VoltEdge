@@ -156,6 +156,9 @@ export const createStripeCheckout = asyncHandler(async (req: AuthRequest, res: R
     statusHistory: [{ status: 'placed', message: 'Order created, awaiting payment', timestamp: new Date() }],
   });
 
+  // Extract the primary frontend URL (in case multiple are comma-separated for CORS)
+  const primaryFrontendUrl = env.FRONTEND_URL.split(',')[0].trim();
+
   // Create Stripe Checkout Session
   const session = await createStripeCheckoutSession({
     orderId: order._id.toString(),
@@ -163,7 +166,7 @@ export const createStripeCheckout = asyncHandler(async (req: AuthRequest, res: R
     amount: Math.round(total * 100), // Stripe expects amounts in smallest currency unit (paise)
     currency: 'inr',
     customerEmail: user.email,
-    successUrl: `${env.FRONTEND_URL}/checkout/success`,
+    successUrl: `${primaryFrontendUrl}/checkout/success`,
   });
 
   order.stripeSessionId = session.id;

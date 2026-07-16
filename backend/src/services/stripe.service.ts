@@ -6,8 +6,8 @@
 import Stripe from 'stripe';
 import { env } from '../config/env';
 
-export const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
-  apiVersion: '2024-04-10', // Use the latest API version
+export const stripe: Stripe = new Stripe(env.STRIPE_SECRET_KEY, {
+  apiVersion: '2026-06-24.dahlia', // Use the expected API version
 });
 
 /**
@@ -20,7 +20,7 @@ export async function createStripeCheckoutSession(params: {
   currency: string;
   customerEmail: string;
   successUrl: string;
-}) {
+}): Promise<Stripe.Response<Stripe.Checkout.Session>> {
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ['card'],
     mode: 'payment',
@@ -52,6 +52,6 @@ export async function createStripeCheckoutSession(params: {
 /**
  * Retrieves a Stripe Checkout Session to verify payment status.
  */
-export async function verifyStripeSession(sessionId: string) {
+export async function verifyStripeSession(sessionId: string): Promise<Stripe.Response<Stripe.Checkout.Session>> {
   return await stripe.checkout.sessions.retrieve(sessionId);
 }
