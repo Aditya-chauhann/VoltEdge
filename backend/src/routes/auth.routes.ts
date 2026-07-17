@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import {
   register, login, verifyOtp,
-  forgotPasswordStep1, forgotPasswordStep2,
+  forgotPasswordStep1, forgotPasswordStep2, changePassword,
   getMe, updateProfile,
   addAddress, updateAddress, deleteAddress,
 } from '../controllers/auth.controller';
@@ -18,6 +18,7 @@ router.post('/forgot-password/check',      authLimiter, forgotPasswordStep1);
 router.post('/forgot-password/reset',      authLimiter, forgotPasswordStep2);
 
 // Protected routes
+router.post('/change-password',            protect, changePassword);
 router.get('/me',                          protect, getMe);
 router.put('/profile',                     protect, updateProfile);
 router.post('/addresses',                  protect, addAddress);

@@ -67,8 +67,11 @@ export const authApi = {
   forgotPasswordCheck: (email: string) =>
     apiClient.post('/auth/forgot-password/check', { email }),
 
-  forgotPasswordReset: (email: string, newPassword: string) =>
-    apiClient.post('/auth/forgot-password/reset', { email, newPassword }),
+  forgotPasswordReset: (email: string, otp: string, newPassword: string) =>
+    apiClient.post('/auth/forgot-password/reset', { email, otp, newPassword }),
+
+  changePassword: (data: { oldPassword?: string; newPassword?: string }) =>
+    apiClient.post('/auth/change-password', data),
 
   getMe: () => apiClient.get('/auth/me'),
 
@@ -207,6 +210,9 @@ export const adminApi = {
   // Finance
   financeConfig:    () => apiClient.get('/admin/finance'),
   updateFinance:    (data: object) => apiClient.put('/admin/finance', data),
+
+  // Settings
+  updateAdminSecret: (newSecret: string) => apiClient.post('/admin/settings/secret', { newSecret }),
 };
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -148,12 +148,13 @@ export default function AuthModal() {
 
   const handleForgotReset = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!form.otp || form.otp.length !== 6) return toast.error('Valid 6-digit OTP is required');
     if (!form.newPassword) return toast.error('New password is required');
     if (form.newPassword.length < 6) return toast.error('Password must be at least 6 characters');
     if (form.newPassword !== form.confirmPassword) return toast.error('Passwords do not match');
     setIsLoading(true);
     try {
-      await authApi.forgotPasswordReset(forgotEmail, form.newPassword);
+      await authApi.forgotPasswordReset(forgotEmail, form.otp, form.newPassword);
       toast.success('Password reset! Please log in with your new password.');
       setMode('login');
     } catch (err) {
@@ -333,9 +334,12 @@ export default function AuthModal() {
               {mode === 'forgot-reset' && (
                 <div className="px-6 py-6">
                   <h2 className="font-display font-bold text-2xl text-gray-900 dark:text-white mb-1">Set new password</h2>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">Enter and confirm your new password</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">Enter the OTP sent to your email and your new password</p>
 
                   <form onSubmit={handleForgotReset} className="space-y-4">
+                    <InputField icon={<Mail size={16} />} type="text" placeholder="6-digit OTP code"
+                      value={form.otp} onChange={(v) => updateField('otp', v)} required pattern="[0-9]{6}" title="Enter 6 digit OTP" />
+                    
                     <InputField icon={<Lock size={16} />} type={showPassword ? 'text' : 'password'}
                       placeholder="New password" value={form.newPassword} onChange={(v) => updateField('newPassword', v)} required minLength={6}
                       suffix={

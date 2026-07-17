@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { User, Phone, Mail, Plus, Trash2, MapPin, Edit3, Check, X } from 'lucide-react';
+import { User, Phone, Mail, Plus, Trash2, MapPin, Edit3, Check, X, Lock, Shield } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
-import { authApi, getApiError } from '@/lib/api';
+import { authApi, adminApi, getApiError } from '@/lib/api';
 import { Address } from '@/types';
 import toast from 'react-hot-toast';
 
@@ -21,6 +21,15 @@ export default function ProfilePage() {
   const [addrForm, setAddrForm] = useState<Partial<Address>>({
     fullName: '', phone: '', line1: '', line2: '', city: '', state: '', pincode: '', country: 'India', isDefault: false,
   });
+
+  // Password state
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [savingPassword, setSavingPassword] = useState(false);
+
+  // Admin secret state
+  const [adminSecret, setAdminSecret] = useState('');
+  const [savingSecret, setSavingSecret] = useState(false);
 
   useEffect(() => {
     if (!_hasHydrated) return;
@@ -212,6 +221,94 @@ export default function ProfilePage() {
           </div>
         )}
       </div>
+
+      {/* ── Security (Change Password) ─────────────────────────── */}
+      <div className="glass-card p-6 mb-6">
+        <div className="flex items-center gap-2 mb-5">
+          <Lock size={18} className="text-gray-900 dark:text-white" />
+          <h2 className="font-display font-semibold text-gray-900 dark:text-white">Security</h2>
+        </div>
+        
+        <form onSubmit={async (e) => {
+          e.preventDefault();
+          if (!oldPassword || !newPassword) return toast.error('Both passwords are required');
+          if (newPassword.length < 6) return toast.error('New password must be at least 6 characters');
+          
+          setSavingPassword(true);
+          try {
+            await authApi.changePassword({ oldPassword, newPassword });
+            toast.success('Password updated successfully');
+            setOldPassword('');
+            setNewPassword('');
+          } catch (err) {
+            toast.error(getApiError(err));
+          } finally {
+            setSavingPassword(false);
+          }
+        }} className="space-y-4 max-w-sm">
+          <input
+            type="password"
+            placeholder="Current Password"
+            value={oldPassword}
+            onChange={(e) => setOldPassword(e.target.value)}
+            className="input-field text-sm"
+            required
+          />
+          <input
+            type="password"
+            placeholder="New Password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            className="input-field text-sm"
+            required minLength={6}
+          />
+          <button type="submit" disabled={savingPassword} className="btn-primary text-sm py-2 px-4 w-full flex items-center justify-center gap-2">
+            {savingPassword ? 'Updating...' : 'Change Password'}
+          </button>
+        </form>
+      </div>
+
+      {/* ── Admin Settings ─────────────────────────────────────── */}
+      {user.role === 'admin' && (
+        <div className="glass-card p-6 mb-6 border-l-4 border-l-primary-400">
+          <div className="flex items-center gap-2 mb-2">
+            <Shield size={18} className="text-primary-400" />
+            <h2 className="font-display font-semibold text-gray-900 dark:text-white">Admin Settings</h2>
+          </div>
+          <p className="text-xs text-gray-600 dark:text-gray-400 mb-5">
+            Update the global Admin Registration Secret key. Anyone registering a new admin account will need this passcode.
+          </p>
+
+          <form onSubmit={async (e) => {
+            e.preventDefault();
+            if (!adminSecret || adminSecret.length < 6) return toast.error('Secret must be at least 6 characters');
+            
+            setSavingSecret(true);
+            try {
+              await adminApi.updateAdminSecret(adminSecret);
+              toast.success('Admin secret updated successfully in .env');
+              setAdminSecret('');
+            } catch (err) {
+              toast.error(getApiError(err));
+            } finally {
+              setSavingSecret(false);
+            }
+          }} className="space-y-4 max-w-sm">
+            <input
+              type="password"
+              placeholder="New Admin Secret"
+              value={adminSecret}
+              onChange={(e) => setAdminSecret(e.target.value)}
+              className="input-field text-sm"
+              required minLength={6}
+            />
+            <button type="submit" disabled={savingSecret} className="btn-ghost bg-primary-400/10 text-primary-400 hover:bg-primary-400 hover:text-white text-sm py-2 px-4 w-full flex items-center justify-center gap-2 transition-colors">
+              {savingSecret ? 'Saving...' : 'Update Admin Secret'}
+            </button>
+          </form>
+        </div>
+      )}
+
     </div>
   );
 }

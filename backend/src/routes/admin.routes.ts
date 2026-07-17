@@ -5,7 +5,8 @@ import {
   adminCreateCategory, adminUpdateCategory,
   adminCreateCoupon, adminListCoupons, adminUpdateCoupon,
   adminGetBanners, adminCreateBanner, adminUpdateBanner, adminDeleteBanner,
-  adminGetFinanceConfig, adminUpdateFinanceConfig
+  adminGetFinanceConfig, adminUpdateFinanceConfig,
+  updateAdminSecret
 } from '../controllers/admin.controller';
 import { protect } from '../middleware/auth.middleware';
 import { adminOnly } from '../middleware/admin.middleware';
@@ -50,5 +51,8 @@ router.put('/policies/:type',          updatePolicy);
 // Finance
 router.get('/finance',                 adminGetFinanceConfig);
 router.put('/finance',                 adminUpdateFinanceConfig);
+
+// Settings
+router.post('/settings/secret',        updateAdminSecret);
 
 export default router;

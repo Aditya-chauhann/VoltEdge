@@ -353,5 +353,48 @@ export const adminUpdateFinanceConfig = asyncHandler(async (req: Request, res: R
   } else {
     config = await FinanceConfig.findByIdAndUpdate(config._id, { $set: req.body }, { new: true });
   }
-  res.json(ok('Finance config updated', config));
+  res.json(ok('Finance config updated successfully', config));
+});
+
+// ─── Settings ─────────────────────────────────────────────────────────────
+
+import fs from 'fs';
+import path from 'path';
+
+export const updateAdminSecret = asyncHandler(async (req: Request, res: Response) => {
+  const { newSecret } = req.body as { newSecret?: string };
+  if (!newSecret || newSecret.length < 6) {
+    throw new ApiError(400, 'New admin secret must be at least 6 characters');
+  }
+
+  // Define the path to the .env file (root of the backend folder)
+  const envPath = path.resolve(process.cwd(), '.env');
+  
+  if (!fs.existsSync(envPath)) {
+    throw new ApiError(500, '.env file not found');
+  }
+
+  // Read .env
+  let envContent = fs.readFileSync(envPath, 'utf8');
+
+  // Replace or append ADMIN_SECRET
+  const secretRegex = /^ADMIN_SECRET=.*$/m;
+  if (secretRegex.test(envContent)) {
+    envContent = envContent.replace(secretRegex, `ADMIN_SECRET=${newSecret}`);
+  } else {
+    envContent += `\nADMIN_SECRET=${newSecret}\n`;
+  }
+
+  // Write back to .env
+  fs.writeFileSync(envPath, envContent, 'utf8');
+
+  // Update process.env and config dynamically for the current runtime
+  process.env.ADMIN_SECRET = newSecret;
+  // We cannot modify the readonly `env` object properties directly in TS without a cast, 
+  // but updating process.env is usually enough for the next read, 
+  // or we cast `env` to any if needed. To be safe, we cast.
+  const configEnv = require('../config/env').env;
+  (configEnv as any).ADMIN_SECRET = newSecret;
+
+  res.json(ok('Admin secret updated successfully', {}));
 });

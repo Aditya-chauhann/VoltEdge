@@ -161,27 +161,35 @@ export const verifyOtp = asyncHandler(async (req: Request, res: Response) => {
   }));
 });
 
-// ─── Forgot Password (demo — no email, direct DB update) ─────────────────────
+// ─── Forgot Password (OTP) ────────────────────────────────────────────────────────
 
 export const forgotPasswordStep1 = asyncHandler(async (req: Request, res: Response) => {
   const { email } = req.body as { email?: string };
   if (!email) throw new ApiError(400, 'Email is required');
 
   const user = await User.findOne({ email: email.toLowerCase() });
-  // Always respond 200 — don't reveal whether email exists (security best practice)
-  // But per user spec, we need to tell them if found so they can show the reset form
+  
   if (!user) {
     throw new ApiError(404, 'No account found with that email address');
   }
 
-  res.json(ok('Email found — you may now reset your password', { emailExists: true }));
+  // Generate 6-digit OTP
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  user.otp = otp;
+  user.otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+  await user.save();
+  
+  // Send OTP
+  await emailService.sendRegistrationOTP(user.email, otp);
+
+  res.json(ok('OTP sent successfully. Please check your email.', { requireOtp: true, email: user.email }));
 });
 
 export const forgotPasswordStep2 = asyncHandler(async (req: Request, res: Response) => {
-  const { email, newPassword } = req.body as { email?: string; newPassword?: string };
+  const { email, otp, newPassword } = req.body as { email?: string; otp?: string; newPassword?: string };
 
-  if (!email || !newPassword) {
-    throw new ApiError(400, 'Email and new password are required');
+  if (!email || !otp || !newPassword) {
+    throw new ApiError(400, 'Email, OTP, and new password are required');
   }
   if (newPassword.length < 6) {
     throw new ApiError(400, 'Password must be at least 6 characters');
@@ -190,11 +198,50 @@ export const forgotPasswordStep2 = asyncHandler(async (req: Request, res: Respon
   const user = await User.findOne({ email: email.toLowerCase() }).select('+passwordHash');
   if (!user) throw new ApiError(404, 'No account found with that email address');
 
+  if (user.otp !== otp) {
+    throw new ApiError(400, 'Invalid OTP');
+  }
+
+  if (!user.otpExpiresAt || user.otpExpiresAt < new Date()) {
+    throw new ApiError(400, 'OTP has expired. Please request a new one.');
+  }
+
   // Update the password — the pre-save hook will hash it
   user.passwordHash = newPassword;
+  
+  // Clear OTP fields
+  user.otp = undefined;
+  user.otpExpiresAt = undefined;
+  
   await user.save();
 
   res.json(ok('Password reset successfully — please log in', {}));
+});
+
+// ─── Change Password (Authenticated) ──────────────────────────────────────────
+
+export const changePassword = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const { oldPassword, newPassword } = req.body as { oldPassword?: string; newPassword?: string };
+
+  if (!oldPassword || !newPassword) {
+    throw new ApiError(400, 'Old password and new password are required');
+  }
+  if (newPassword.length < 6) {
+    throw new ApiError(400, 'New password must be at least 6 characters');
+  }
+
+  const user = await User.findById(req.user!.id).select('+passwordHash');
+  if (!user) throw new ApiError(404, 'User not found');
+
+  const isMatch = await user.comparePassword(oldPassword);
+  if (!isMatch) {
+    throw new ApiError(400, 'Incorrect old password');
+  }
+
+  user.passwordHash = newPassword;
+  await user.save();
+
+  res.json(ok('Password updated successfully', {}));
 });
 
 // ─── Get current user ────────────────────────────────────────────────────────
